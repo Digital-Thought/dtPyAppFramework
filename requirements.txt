@@ -7,3 +7,6 @@ pybase64
 boto3
 azure-identity
 azure-keyvault-secrets
+pytest-mock
+pytest-watch
+pytest
