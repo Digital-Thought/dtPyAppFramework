@@ -1,0 +1,9 @@
+pykeepass
+PyYaml
+sqlalchemy
+colorlog
+psutil
+pybase64
+boto3
+azure-identity
+azure-keyvault-secrets
