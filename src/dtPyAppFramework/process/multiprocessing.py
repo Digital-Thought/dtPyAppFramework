@@ -126,6 +126,7 @@ class DtProcess(Process):
         self.job_id = job_id
         self.job_name = job_name
         self.parent_log_path = parent_log_path
+        self.multi_processing_job = None
         super(DtProcess, self).__init__(target=target, name=name, args=args, kwargs=kwargs)
 
     def set_parent(self, job):
