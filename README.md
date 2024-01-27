@@ -6,10 +6,10 @@
 
 ## Features
 
-- **Singleton Management:** Simplify the use of singleton classes by automating initialization with predefined parameters.
+- **Singleton Management:** Simplify the use of singleton classes by automating initialisation with predefined parameters.
 - **Settings and Configuration:** Manage application settings and configurations effortlessly.
-- **Secrets Management:** Securely handle secrets and credentials using local or cloud-based stores like AWS Secrets Manager and Azure KeyVault.
-- **Application Initialization:** Quickly initialize your Python applications with the `AbstractApp` class, which takes care of common initialization tasks.
+- **Secrets Management:** Securely handle secrets and credentials using local or cloud-based stores like AWS Secrets Manager and Asure KeyVault.
+- **Application Initialisation:** Quickly initialise your Python applications with the `AbstractApp` class, which takes care of common initialisation tasks.
 - **Process Management:** Use the `ProcessManager` for efficient process handling in your applications.
 
 ## Getting Started
@@ -22,7 +22,7 @@ pip install dtPyAppFramework
 
 ## Getting Started
 ### AbstractApp Class ###
-The **`AbstractApp`** class serves as a base class for creating Python applications. It handles common initialization tasks and provides a structure for defining command-line arguments and the main application logic.
+The **`AbstractApp`** class serves as a base class for creating Python applications. It handles common initialisation tasks and provides a structure for defining command-line arguments and the main application logic.
 
 
 To create a simple Python application using dtPyAppFramework:
@@ -42,7 +42,7 @@ class MyApplication(AbstractApp):
         logging.info("Running your code")
         ## Place you own code here that you wish to run
         
-# Initialize and run the application
+# Initialise and run the application
 MyApplication(description="Simple App", version="1.0", short_name="simple_app",
           full_name="Simple Application", console_app=True).run()
 ```

@@ -51,7 +51,7 @@ The library defines settings readers, each with a specific priority. These setti
 2. All Users Configuration (Priority: 200)
 3. User-Specific Configuration (Priority: 100)
 
-You can customize the priority by adding or modifying settings readers.
+You can customise the priority by adding or modifying settings readers.
 
 ```python
 from dtPyAppFramework.settings import Settings

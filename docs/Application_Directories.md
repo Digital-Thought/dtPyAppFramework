@@ -1,6 +1,6 @@
 # Application Directories
 
-The `dtPyAppFramework` automatically prepares a set of application directories or paths upon initialization. These directories serve different purposes and are designed to enhance the organization and functionality of the application.
+The `dtPyAppFramework` automatically prepares a set of application directories or paths upon initialisation. These directories serve different purposes and are designed to enhance the organisation and functionality of the application.
 
 ## User Data Root Path
 

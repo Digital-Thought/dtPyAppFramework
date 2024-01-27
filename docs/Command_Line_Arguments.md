@@ -2,7 +2,7 @@
 
 The **dtPyAppFramework** provides flexible command line argument handling to cater to the specific needs of your application. This is achieved by implementing the `define_args` method within your custom application class, which inherits from the `AbstractApp` class.
 
-## Customizing Command Line Arguments
+## Customising Command Line Arguments
 
 When you create an instance of your application class, you can define custom command line arguments by overriding the `define_args` method. This method is responsible for defining the command line arguments specific to your application.
 

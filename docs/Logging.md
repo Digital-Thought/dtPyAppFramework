@@ -2,7 +2,7 @@
 The **`dtPyAppFramework`** provides a robust logging framework to ensure effective monitoring and debugging of your application. Logging can be configured to send logs to both file output and the console or exclusively to log files based on your preferences.
 
 ## Logging Configuration
-When the framework is initialized, logging is configured based on the parameters provided to the **`AbstractApp`** class, specifically the **`console_app`** parameter. This parameter determines whether logs should be sent to the console (`stdout`) in addition to log files.
+When the framework is initialised, logging is configured based on the parameters provided to the **`AbstractApp`** class, specifically the **`console_app`** parameter. This parameter determines whether logs should be sent to the console (`stdout`) in addition to log files.
 
 **Console App Logging:**
 
@@ -38,7 +38,7 @@ from dtPyAppFramework.application import AbstractApp
 # Create an instance of AbstractApp with console_app set to True
 app_instance = AbstractApp(description="My App", version="1.0", short_name="my_app", full_name="My Application", console_app=True)
 
-# Initialize logging based on the provided configuration
+# Initialise logging based on the provided configuration
 app_instance.run()
 ```
 
@@ -137,6 +137,6 @@ root:
 In this example, we define a custom formatter named **`detailed`** and two handlers: one for console output (**`console`**) and another for file output (**`file`**). Adjust the configuration to meet your specific needs.
 
 ### Using the Custom Logging Configuration
-When the **`dtPyAppFramework`** initializes, it will look for the **`loggingConfig.yaml`** file based on the specified search path logic. If found, it will use the custom logging configuration defined in that file. If not found, the default logging settings will be applied.
+When the **`dtPyAppFramework`** initialises, it will look for the **`loggingConfig.yaml`** file based on the specified search path logic. If found, it will use the custom logging configuration defined in that file. If not found, the default logging settings will be applied.
 
 This feature allows you to have fine-grained control over your application's logging behavior and tailor it according to your preferences.
