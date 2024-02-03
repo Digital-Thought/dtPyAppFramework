@@ -4,7 +4,7 @@ description = "A Python library for common features in application development."
 keywords = ["framework", "logging", "secrets", "settings"]
 requires-python = ">=3.9"
 license = { file = "LICENCE.txt" }
-readme  = ["README.txt"]
+readme  = "README.md"
 authors = [
     {name = "Digital-Thought", email = "dev@digital-thought.org"},
 ]
