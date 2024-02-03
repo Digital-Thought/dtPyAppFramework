@@ -4,6 +4,7 @@ description = "A Python library for common features in application development."
 keywords = ["framework", "logging", "secrets", "settings"]
 requires-python = ">=3.9"
 license = { file = "LICENCE.txt" }
+readme  = { file = "README.txt" }
 authors = [
     {name = "Digital-Thought", email = "dev@digital-thought.org"},
 ]
@@ -29,7 +30,7 @@ classifiers = [
     "Topic :: System :: Systems Administration",
     "Topic :: Utilities"
 ]
-dynamic = ["dependencies", "readme", "version"]
+dynamic = ["dependencies", "version"]
 
 [tool.setuptools]
 include-package-data = true
@@ -43,5 +44,4 @@ where = ["src"]
 
 [tool.setuptools.dynamic]
 dependencies = {file = ["requirements.txt"]}
-readme = {file = ["README.md"]}
 version = {file = ["src/dtPyAppFramework/version.dat"]}
