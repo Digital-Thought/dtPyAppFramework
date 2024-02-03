@@ -7,7 +7,7 @@ copyright = '2024, Digital-Thought'
 author = 'Digital-Thought'
 
 release = '0.2'
-version = '0.2'
+version = '0.2.1'
 
 # -- General configuration
 
