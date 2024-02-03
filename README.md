@@ -49,7 +49,7 @@ MyApplication(description="Simple App", version="1.0", short_name="simple_app",
 
 The above example will output the following to the console:
 
-![Output](docs/simple_app_output.jpg)
+![Output](https://github.com/Digital-Thought/dtPyAppFramework/docs/simple_app_output.jpg)
 
 ## Features
 Now lets take some time to go over the various features that makes `dtPyAppFramework` such a power library to base your 
@@ -59,35 +59,35 @@ Python projects of.
 `dtPyAppFramework` offers flexible logging capabilities, allowing you to configure and manage logs easily. <br>
 In addition it offers some pretty cool logging capabilities straight out of the door which requires no setup from you.
 
-[More about logging](docs/Logging.md)
+[More about logging](https://github.com/Digital-Thought/dtPyAppFramework/docs/Logging.md)
 
 ### Configuration Files
 Easily read and manage configuration settings from configurations files.<br>
 Configuration files can be set for a specific user or for any user of the application.
 
-[More about configuration files](docs/Configuration_Files.md)
+[More about configuration files](https://github.com/Digital-Thought/dtPyAppFramework/docs/Configuration_Files.md)
 
 ### Secrets Management
 Securely store and retrieve sensitive information with encryption and best practices.<br>
 You can store secrets for a specific user or make secrets available to all users of the application.<br>
 In addition, you can use the AWS Secrets Management seamlessly within the application alongside the in-built secrets store.
 
-[More about secrets management](docs/Secrets_Management.md)
+[More about secrets management](https://github.com/Digital-Thought/dtPyAppFramework/docs/Secrets_Management.md)
 
 ### Command Line Arguments
 Effortlessly parse and manage command line arguments with support for defining options and accessing them in your code.
 
-[More about command line arguments](docs/Command_Line_Arguments.md)
+[More about command line arguments](https://github.com/Digital-Thought/dtPyAppFramework/docs/Command_Line_Arguments.md)
 
 ### Application Directories
 Access common resource paths like user storage directories.
 
-[More about resource paths](docs/Application_Directories)
+[More about resource paths](https://github.com/Digital-Thought/dtPyAppFramework/docs/Application_Directories)
 
 ### Resource Manager
 A robust Resource Manager, which is a singleton class named `ResourceManager`.
 
-[More about resource paths](docs/Resource_Manager.md)
+[More about resource paths](https://github.com/Digital-Thought/dtPyAppFramework/docs/Resource_Manager.md)
 
 ## License
 
@@ -95,4 +95,4 @@ This project is licensed under the [MIT License](https://opensource.org/licenses
 
 ## Contact
 
-If you have any questions, bug reports, or feature requests, feel free to [contact us](mailto:matthew@digital-thought.org).
+If you have any questions, bug reports, or feature requests, feel free to [contact us](mailto:dev@digital-thought.org).
