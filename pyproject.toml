@@ -5,6 +5,8 @@ keywords = ["framework", "logging", "secrets", "settings"]
 requires-python = ">=3.9"
 license = { file = "LICENCE.txt" }
 readme  = "README.md"
+repository = "https://github.com/Digital-Thought/dtPyAppFramework"
+homepage = "https://github.com/Digital-Thought/dtPyAppFramework"
 authors = [
     {name = "Digital-Thought", email = "dev@digital-thought.org"},
 ]
