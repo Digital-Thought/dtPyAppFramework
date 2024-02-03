@@ -81,7 +81,7 @@ Logging
 ``dtPyAppFramework`` offers flexible logging capabilities, allowing you to configure and manage logs easily. :raw-html-m2r:`<br>`
 In addition it offers some pretty cool logging capabilities straight out of the door which requires no setup from you.
 
-`More about logging <Logging.md>`_
+`More about logging <Logging.rst>`_
 
 Configuration Files
 ^^^^^^^^^^^^^^^^^^^
@@ -89,7 +89,7 @@ Configuration Files
 Easily read and manage configuration settings from configurations files.\ :raw-html-m2r:`<br>`
 Configuration files can be set for a specific user or for any user of the application.
 
-`More about configuration files <Configuration_Files.md>`_
+`More about configuration files <Configuration_Files.rst>`_
 
 Secrets Management
 ^^^^^^^^^^^^^^^^^^
@@ -98,28 +98,28 @@ Securely store and retrieve sensitive information with encryption and best pract
 You can store secrets for a specific user or make secrets available to all users of the application.\ :raw-html-m2r:`<br>`
 In addition, you can use the AWS Secrets Management seamlessly within the application alongside the in-built secrets store.
 
-`More about secrets management <Secrets_Management.md>`_
+`More about secrets management <Secrets_Management.rst>`_
 
 Command Line Arguments
 ^^^^^^^^^^^^^^^^^^^^^^
 
 Effortlessly parse and manage command line arguments with support for defining options and accessing them in your code.
 
-`More about command line arguments <Command_Line_Arguments.md>`_
+`More about command line arguments <Command_Line_Arguments.rst>`_
 
 Application Directories
 ^^^^^^^^^^^^^^^^^^^^^^^
 
 Access common resource paths like user storage directories.
 
-`More about resource paths <Application_Directories.md>`_
+`More about resource paths <Application_Directories.rst>`_
 
 Resource Manager
 ^^^^^^^^^^^^^^^^
 
 A robust Resource Manager, which is a singleton class named ``ResourceManager``.
 
-`More about resource paths <Resource_Manager.md>`_
+`More about resource paths <Resource_Manager.rst>`_
 
 License
 -------
