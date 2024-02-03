@@ -1,1 +1,2 @@
 include src/dtPyAppFramework/_resources/*
+include src/dtPyAppFramework/*.dat
