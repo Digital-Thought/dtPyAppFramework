@@ -1,4 +1,3 @@
-setuptools
 PyYaml
 colorlog
 psutil
