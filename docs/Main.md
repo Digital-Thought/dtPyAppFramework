@@ -45,6 +45,10 @@ MyApplication(description="Simple App", version="1.0", short_name="simple_app",
           full_name="Simple Application", console_app=True).run()
 ```
 
+The above example will output the following to the console:
+
+![Output](simple_app_output.jpg)
+
 ## Features
 Now lets take some time to go over the various features that makes `dtPyAppFramework` such a power library to base your 
 Python projects of.
@@ -53,23 +57,35 @@ Python projects of.
 `dtPyAppFramework` offers flexible logging capabilities, allowing you to configure and manage logs easily. <br>
 In addition it offers some pretty cool logging capabilities straight out of the door which requires no setup from you.
 
+[More about logging](Logging.md)
+
 ### Configuration Files
 Easily read and manage configuration settings from configurations files.<br>
 Configuration files can be set for a specific user or for any user of the application.
+
+[More about configuration files](Configuration_Files.md)
 
 ### Secrets Management
 Securely store and retrieve sensitive information with encryption and best practices.<br>
 You can store secrets for a specific user or make secrets available to all users of the application.<br>
 In addition, you can use the AWS Secrets Management seamlessly within the application alongside the in-built secrets store.
 
+[More about secrets management](Secrets_Management.md)
+
 ### Command Line Arguments
 Effortlessly parse and manage command line arguments with support for defining options and accessing them in your code.
+
+[More about command line arguments](Command_Line_Arguments.md)
 
 ### Application Directories
 Access common resource paths like user storage directories.
 
+[More about resource paths](Application_Directories.md)
+
 ### Resource Manager
 A robust Resource Manager, which is a singleton class named `ResourceManager`.
+
+[More about resource paths](Resource_Manager.md)
 
 ## License
 

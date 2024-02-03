@@ -35,6 +35,7 @@ dynamic = ["dependencies", "version"]
 [project.urls]
 Homepage = "https://github.com/Digital-Thought/dtPyAppFramework"
 Repository = "https://github.com/Digital-Thought/dtPyAppFramework"
+Documentation = "https://github.com/Digital-Thought/dtPyAppFramework/blob/master/docs/Main.md"
 
 [tool.setuptools]
 include-package-data = true
