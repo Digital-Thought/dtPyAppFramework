@@ -101,7 +101,7 @@ The following table details the keys and values which are supported when definin
      - str
      - If ``aws_profile`` is ``key``
      - Specifies an AWS access key associated with an IAM account.
-     - 
+     -
    * - aws_secret_access_key
      - str
      - If ``aws_profile`` is ``key``
@@ -141,6 +141,7 @@ The following table details the keys and values which are supported when definin
      - str
      - If ``asure_identity_type`` is ``key``
      - One of the service principal's client secrets.
+     -
 
 
 **SafeGuarding Authentication Keys for Cloud Stores**
