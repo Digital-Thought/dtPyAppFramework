@@ -42,7 +42,7 @@ To create a simple Python application using dtPyAppFramework:
 
 .. code-block:: python
 
-   from dtPyAppFramework.app import AbstractApp
+   from dtPyAppFramework.application import AbstractApp
    from dtPyAppFramework import settings
 
    import logging
