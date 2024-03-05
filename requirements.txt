@@ -3,7 +3,7 @@ colorlog
 psutil
 pybase64
 boto3
-cryptography==39.0.2
+cryptography==42.0.4
 azure-identity
 azure-keyvault-secrets
 pykeystore
