@@ -97,8 +97,9 @@ class AbstractApp(object):
             arg_parser (ArgumentParser): The ArgumentParser object for defining command-line arguments.
         """
         # Common arguments for various states
-        arg_parser.add_argument('--password', action='store', type=str, required=False,
-                                help="Secrets Store password")
+        arg_parser.add_argument('--init', action='store_true', required=False, help='Initialise environment')
+        arg_parser.add_argument('--add_secret', action='store_true', required=False, help='Add secret to store')
+        arg_parser.add_argument('--run', action='store_true', required=False, help='Run Processor')
 
         # Check specific states and add corresponding arguments
         opts, rem_args = arg_parser.parse_known_args()
