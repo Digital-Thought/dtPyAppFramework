@@ -1,16 +1,15 @@
 import os
 import sys
-import subprocess
 import logging
 import re
 import pybase64
 
 from .secret_store import AbstractSecretStore, SecretsStoreException
-from pykeepass import PyKeePass
 from itertools import cycle
 from ...misc import run_cmd
 import pykeystore
 from base64 import urlsafe_b64encode
+
 
 class LocalSecretStore(AbstractSecretStore):
     """
