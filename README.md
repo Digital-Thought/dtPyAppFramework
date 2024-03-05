@@ -25,7 +25,7 @@ The **`AbstractApp`** class serves as a base class for creating Python applicati
 
 To create a simple Python application using dtPyAppFramework:
 ```python
-from dtPyAppFramework.app import AbstractApp
+from dtPyAppFramework.application import AbstractApp
 from dtPyAppFramework import settings
 
 import logging
