@@ -111,6 +111,7 @@ The following table details the keys and values which are supported when definin
      - str
      - If ``store_type`` is ``aws``
      - Specifies the name of the 'Secret name' this profile is to access.
+     -
    * - Azure_keyvault
      - str
      - If ``store_type`` is ``Azure``
