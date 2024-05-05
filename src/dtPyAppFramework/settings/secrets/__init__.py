@@ -108,9 +108,12 @@ class SecretsManager(object):
         if key.startswith("Secret#"):
             elements = key.split("#")
             store_name = elements[1]
+        else:
+            elements = key.split(".")
+            store_name = elements[0]
 
         for store in self.stores:
-            if store_name and store_name == store.store_name():
+            if store_name and store_name == store.store_name:
                 value = store.get_secret(key, None)
                 break
             elif not store_name:

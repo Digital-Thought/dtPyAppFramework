@@ -84,6 +84,8 @@ class ProcessManager():
                                                                spawned_process=True,
                                                                job_id=job_id, worker_id=worker_id,
                                                                parent_log_path=parent_log_path)
+                self.application_settings.init_settings_readers()
+                self.application_settings.secret_manager.load_cloud_stores()
 
                 self.__initialise_stdout_capt__()
 
@@ -93,6 +95,7 @@ class ProcessManager():
                 print(header_message)
 
                 self.load_config()
+
 
         except Exception as ex:
             logging.exception(ex)
@@ -127,7 +130,7 @@ class ProcessManager():
                 self.application_settings = settings.Settings(application_paths=self.application_paths)
                 self.resource_manager = resources.ResourceManager(application_paths=self.application_paths)
                 self.log_path = app_logging.initialise_logging(redirect_console=not self.console_app)
-
+                self.application_settings.init_settings_readers()
                 self.application_settings.secret_manager.load_cloud_stores()
                 self.__initialise_stdout_capt__()
 
@@ -139,6 +142,7 @@ class ProcessManager():
                     print(f'Log Path: {self.log_path}')
                     self.multiprocessing_manager.set_log_path(self.log_path)
                 args = arg_parser.parse_args()
+
                 if args.add_secret:
                     self.__add_secret__(args)
                 else:

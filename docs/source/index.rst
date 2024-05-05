@@ -121,6 +121,11 @@ A robust Resource Manager, which is a singleton class named ``ResourceManager``.
 
 `More about resource paths <Resource_Manager.html>`_
 
+Examples
+-------
+`Accessing Secrets in AWS Secrets Manager <AWS_Secrets_Manager_Example.html>`_
+
+
 License
 -------
 

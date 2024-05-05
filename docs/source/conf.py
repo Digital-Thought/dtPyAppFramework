@@ -6,8 +6,8 @@ project = 'dtPyAppFramework'
 copyright = '2024, Digital-Thought'
 author = 'Digital-Thought'
 
-release = '1.0'
-version = '1.0'
+release = '1.2'
+version = '1.2'
 
 # -- General configuration
 

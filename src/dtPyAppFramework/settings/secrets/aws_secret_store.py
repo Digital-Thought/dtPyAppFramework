@@ -1,3 +1,5 @@
+import json
+
 from .secret_store import AbstractSecretStore, SecretsStoreException
 from shutil import which
 from ...misc import run_cmd
@@ -45,6 +47,8 @@ class AWSSecretsStore(AbstractSecretStore):
 
         self.aws_session = None
 
+        self.secret_name = self.get_store_setting('secret_name')
+
         # Initialize AWS session based on profile type
         if self.aws_profile == 'key':
             aws_access_key_id = self.get_store_setting('aws_access_key_id')
@@ -72,6 +76,8 @@ class AWSSecretsStore(AbstractSecretStore):
         except Exception as ex:
             raise SecretsStoreException(f'AWS Secrets Store, Not Available. Error: {str(ex)}')
 
+        logging.info(f'Initialised AWS Secrets Manager {store_name}')
+
     def get_secret(self, key, default_value=None):
         """
         Get a secret from the AWS Secrets Manager.
@@ -84,9 +90,23 @@ class AWSSecretsStore(AbstractSecretStore):
             Secret value if found, else default_value.
         """
         try:
-            entry = self.aws_secretsmanager.get_secret_value(SecretId=key)['SecretString']
+            if self.secret_name is not None:
+                entry = self.aws_secretsmanager.get_secret_value(SecretId=self.secret_name)['SecretString']
+            else:
+                entry = self.aws_secretsmanager.get_secret_value(SecretId=key)['SecretString']
+            if entry.startswith('{'):
+                entry = json.loads(entry)
+
+            if len(key.split('.')) == 0:
+                return entry
+            elif len(key.split('.')) == 2:
+                return entry[key.split('.')[1]]
+            elif len(key.split('.')) == 1 and key == self.store_name:
+                return entry
+            else:
+                raise SecretsStoreException(f'Unrecognised AWS Key of secret {key}')
         except Exception as ex:
-            logging.error(str(ex))
+            logging.error(f'{str(ex)} KEY: {key}')
             entry = None
 
         if not entry:
