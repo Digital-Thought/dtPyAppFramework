@@ -108,7 +108,7 @@ class SecretsManager(object):
         if key.startswith("Secret#"):
             elements = key.split("#")
             store_name = elements[1]
-        else:
+        elif "." in key:
             elements = key.split(".")
             store_name = elements[0]
 
