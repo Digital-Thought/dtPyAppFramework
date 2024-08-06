@@ -111,13 +111,7 @@ class SecretsManager(object):
             Secret value if found, else default_value.
         """
         value = None
-        if key.startswith("Secret#"):
-            elements = key.split("#")
-            key = elements[1]
-            if '@' in key:
-                store_name = key.split("@")[1]
-                key = key.split("@")[0]
-        elif len(key.split(".")) == 2 and key.split(".")[0] in self.store_names:
+        if len(key.split(".")) == 2 and key.split(".")[0] in self.store_names:
             elements = key.split(".")
             store_name = elements[0]
             key = elements[1]
