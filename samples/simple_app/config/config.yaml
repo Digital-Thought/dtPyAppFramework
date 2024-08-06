@@ -1,12 +1,8 @@
 test_setting:
-  user: SEC/test1
-  bob:
-    - ENV/DEV_MODE
-    - SEC/test1
-  sub:
-    sub1: ENV/DEV_MODE
+  app_core: Application, CORE Setting Value
 
-
+logging:
+  level: DEBUG
 #secrets_manager:
 #  cloud_stores:
 #    test1:
