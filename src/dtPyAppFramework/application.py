@@ -100,9 +100,13 @@ class AbstractApp(object):
         arg_parser.add_argument('--init', action='store_true', required=False, help='Initialise environment')
         arg_parser.add_argument('--add_secret', action='store_true', required=False, help='Add secret to store')
         arg_parser.add_argument('--run', action='store_true', required=False, help='Run Processor')
-
+        arg_parser.add_argument('--single_folder', action='store_true', required=False, help='Keeps all Directories in a single folder')
+        self.define_args(arg_parser)
         # Check specific states and add corresponding arguments
         opts, rem_args = arg_parser.parse_known_args()
+
+        if opts.single_folder:
+            os.environ['DEV_MODE'] = "True"
 
         if opts.init:
             arg_parser.add_argument('--password', action='store', type=str, required=False,
@@ -111,8 +115,6 @@ class AbstractApp(object):
         elif opts.add_secret:
             arg_parser.add_argument('--name', action='store', type=str, required=True, help="Secret Name")
             arg_parser.add_argument('--value', action='store', type=str, required=True, help="Secret Value")
-        else:
-            self.define_args(arg_parser)
 
     def run(self):
         """
