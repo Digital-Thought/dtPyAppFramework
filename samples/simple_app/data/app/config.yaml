@@ -1,2 +1,5 @@
 test_setting:
   all_users: Application, All Users Setting Value
+
+logging:
+  level: INFO

@@ -81,21 +81,41 @@ class Settings(dict):
         """
         try:
             value = self.__getitem__(key)
-            if isinstance(value, str) and str(value).startswith('ENV/'):
-                return os.getenv(str(value).replace('ENV/', '').strip(), value)
-            if isinstance(value, str) and str(value).startswith('SEC/'):
-                return self.secret_manager.get_secret(str(value).replace('SEC/', '').strip(), default)
-            if isinstance(value, str) and str(value).startswith('<USR>'):
-                return str(value).replace('<USR>', self.application_paths.usr_data_root_path).strip()
-            if isinstance(value, str) and str(value).startswith('<APP>'):
-                return str(value).replace('<APP>', self.application_paths.app_data_root_path).strip()
-            if isinstance(value, str) and str(value).startswith('AWS_Secret#'):
-                return self.secret_manager.get_secret(str(value).strip(), default)
+            value = self._replace_value(value)
             if not value:
                 return default
             return value
         except KeyError:
             return default
+
+    def _replace_value(self, obj):
+        if isinstance(obj, dict):
+            for key, value in obj.items():
+                if isinstance(value, str):
+                    obj[key] = self._lookup_alias_value(value)
+                elif isinstance(value, (dict, list)):
+                    self._replace_value(value)
+        elif isinstance(obj, list):
+            for i, item in enumerate(obj):
+                if isinstance(item, str):
+                    obj[i] = self._lookup_alias_value(item)
+                elif isinstance(item, (dict, list)):
+                    self._replace_value(item)
+        elif isinstance(obj, str):
+            obj = self._lookup_alias_value(obj)
+
+        return obj
+
+    def _lookup_alias_value(self, value):
+        if isinstance(value, str) and str(value).startswith('ENV/'):
+            return os.getenv(str(value).replace('ENV/', '').strip(), value)
+        if isinstance(value, str) and str(value).startswith('SEC/'):
+            return self.secret_manager.get_secret(str(value).replace('SEC/', '').strip(), None)
+        if isinstance(value, str) and str(value).startswith('<USR>'):
+            return str(value).replace('<USR>', self.application_paths.usr_data_root_path).strip()
+        if isinstance(value, str) and str(value).startswith('<APP>'):
+            return str(value).replace('<APP>', self.application_paths.app_data_root_path).strip()
+        return value
 
     def set(self, key, value, store_name=None):
         """

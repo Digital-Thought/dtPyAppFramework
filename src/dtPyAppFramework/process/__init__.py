@@ -128,9 +128,10 @@ class ProcessManager():
             if not is_multiprocess_spawned_instance():
                 self.application_paths = paths.ApplicationPaths(app_short_name=self.short_name)
                 self.application_settings = settings.Settings(application_paths=self.application_paths)
+                self.application_settings.init_settings_readers()
                 self.resource_manager = resources.ResourceManager(application_paths=self.application_paths)
                 self.log_path = app_logging.initialise_logging(redirect_console=not self.console_app)
-                self.application_settings.init_settings_readers()
+                #self.application_settings.init_settings_readers()
                 self.application_settings.secret_manager.load_cloud_stores()
                 self.__initialise_stdout_capt__()
 

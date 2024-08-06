@@ -29,6 +29,7 @@ class SecretsManager(object):
         self.application_paths = application_paths
         self.application_settings = application_settings
         self.stores = []
+        self.store_names = []
 
         if not self.application_paths:
             self.application_paths = ApplicationPaths()
@@ -51,7 +52,12 @@ class SecretsManager(object):
             print(f'Skipping APP Local Secret Store. {ex}')
 
         # Sort stores based on priority
+        self._sort_stores()
+
+    def _sort_stores(self):
         self.stores.sort(key=lambda x: x.store_priority)
+        for store in self.stores:
+            self.store_names.append(store.store_name)
 
     def load_cloud_stores(self):
         """
@@ -75,7 +81,7 @@ class SecretsManager(object):
                                                          application_settings=self.application_settings))
 
         # Sort stores based on priority
-        self.stores.sort(key=lambda x: x.store_priority)
+        self._sort_stores()
 
     def get_store(self, store_name):
         """
@@ -88,7 +94,7 @@ class SecretsManager(object):
             Secret store instance if found, else None.
         """
         for store in self.stores:
-            if store_name == store.store_name():
+            if store_name == store.store_name:
                 return store
         return None
 
@@ -105,12 +111,10 @@ class SecretsManager(object):
             Secret value if found, else default_value.
         """
         value = None
-        if key.startswith("Secret#"):
-            elements = key.split("#")
-            store_name = elements[1]
-        else:
+        if len(key.split(".")) == 2 and key.split(".")[0] in self.store_names:
             elements = key.split(".")
             store_name = elements[0]
+            key = elements[1]
 
         for store in self.stores:
             if store_name and store_name == store.store_name:
