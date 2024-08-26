@@ -174,7 +174,10 @@ class Settings(dict):
 
         value = None
         for reader in self.settings_readers:
-            value = reader.__getitem__(key)
+            try:
+                value = reader.__getitem__(key)
+            except:
+                value = None
             if value:
                 break
 
