@@ -1,3 +1,4 @@
+import json
 import os
 import sys
 import logging
@@ -53,17 +54,18 @@ class LocalSecretStore(AbstractSecretStore):
         if password is None:
             password = self.__guid()
 
-        # If the store does not exist, initialize it
-        if not os.path.exists(self.store_path):
-            self.store = self.__initialise_secrets_store(password)
-
         try:
+            # If the store does not exist, initialize it
+            if not os.path.exists(self.store_path):
+                self.store = self.__initialise_secrets_store(password)
+
             # Try to load the existing store
             self.store = pykeystore.KeyStoreEx.load(self.store_path, password)
+            self.store_available = True
+            self.store_read_only = not self.__is_writeable()
+            logging.info(f'Successfully opened Secrets Store: {self.store_path}')
         except Exception as ex:
             raise SecretsStoreException(f'Failed to open Secrets Store: {self.store_path}. Error: {str(ex)}')
-
-        logging.info(f'Successfully opened Secrets Store: {self.store_path}')
 
     def __initialise_secrets_store(self, password):
         """
@@ -129,6 +131,7 @@ class LocalSecretStore(AbstractSecretStore):
         entry = self.store.getPassword(account=key)
         if not entry or entry == 'NONE':
             return default_value
+
         return entry
 
     def set_secret(self, key, value):
@@ -144,6 +147,9 @@ class LocalSecretStore(AbstractSecretStore):
 
         self.store.setPassword(account=key, password=value)
         self.__save()
+        index = self.get_index()
+        index.append(key)
+        self.__set_index(index)
 
     def delete_secret(self, key):
         """
@@ -154,7 +160,31 @@ class LocalSecretStore(AbstractSecretStore):
         """
         entry = self.store.setPassword(account=key, password='NONE')
         self.__save()
+        index = self.get_index()
+        index.remove(key)
+        self.__set_index(index)
+
+    def __set_index(self, index: list):
+        logging.info(index)
+        self.store.setPassword(account=f'{self.store_name}.INDEX', password=json.dumps(index))
+        self.__save()
+
+    def get_index(self) -> list:
+        index = self.get_secret(f'{self.store_name}.INDEX', None)
+        if index is None:
+            self.__set_index([])
+            return []
+
+        return json.loads(index)
 
     def __save(self):
         """Save the changes made to the local secret store."""
         self.store.save(self.store_path, self.__guid())
+
+    def __is_writeable(self):
+        try:
+            self.__save()
+            return True
+        except Exception as ex:
+            logging.warning(str(ex))
+            return False
