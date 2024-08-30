@@ -41,6 +41,8 @@ class AbstractSecretStore(object):
         self.store_priority = store_priority
         self.store_type = store_type
         self.application_settings = application_settings
+        self.store_available: bool = False
+        self.store_read_only: bool = True
 
     def priority(self):
         """Get the priority of the secret store."""

@@ -17,10 +17,14 @@ class SimpleApp(AbstractApp):
 
     def main(self, args):
         logging.info("Running your code")
+        logging.info(f'Secrets Store Index : {Settings().secret_manager.get_local_stores_index()}')
+        Settings()['bob'] = 'hellow world'
+        logging.info('setting bob')
         logging.info(f'All Key/Value Pairs in the Secret for cloud store "test1" : {Settings().get("test1")}')
         logging.info(f'All Key/Value Pairs in the Secret for cloud store "test_setting.bob" : {Settings().get("test_setting.bob")}')
         logging.debug(f'All Key/Value Pairs in the Secret for cloud store "test_setting.bob" : {Settings().get("test_setting.bob")}')
         logging.info(f'All Key/Value Pairs in the Secret for cloud store "test_setting.app_core" : {Settings().get("test_setting.app_core")}')
+        Settings().secret_manager.delete_secret('bob')
         # logging.info(f'Just the value for "key1" in the Secret for cloud store "test1" : {settings.Settings()['test1.key1']}')
 
 

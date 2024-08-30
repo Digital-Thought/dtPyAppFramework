@@ -17,7 +17,7 @@ class SecretsManager(object):
         stores (list): A list to hold different secret stores.
     """
 
-    def __init__(self, application_paths=None, application_settings=None) -> None:
+    def __init__(self, application_paths=None, application_settings=None, cloud_session_manager=None) -> None:
         """
         Initialize the SecretsManager.
 
@@ -28,6 +28,7 @@ class SecretsManager(object):
         super().__init__()
         self.application_paths = application_paths
         self.application_settings = application_settings
+        self.cloud_session_manager = cloud_session_manager
         self.stores = []
         self.store_names = []
 
@@ -36,7 +37,7 @@ class SecretsManager(object):
 
         # Add local user secret store
         self.stores.append(LocalSecretStore(store_name="User_Local_Store",
-                                            store_priority=-1,
+                                            store_priority=-0,
                                             root_store_path=self.application_paths.usr_data_root_path,
                                             application_settings=self.application_settings,
                                             app_short_name=self.application_paths.app_short_name))
@@ -44,7 +45,7 @@ class SecretsManager(object):
         try:
             # Add local app secret store (if it exists)
             self.stores.append(LocalSecretStore(store_name="App_Local_Store",
-                                                store_priority=0,
+                                                store_priority=1,
                                                 root_store_path=self.application_paths.app_data_root_path,
                                                 application_settings=self.application_settings,
                                                 app_short_name=self.application_paths.app_short_name))
@@ -53,6 +54,16 @@ class SecretsManager(object):
 
         # Sort stores based on priority
         self._sort_stores()
+
+    def get_local_stores_index(self):
+        _index = {"User_Local_Store": {}, "App_Local_Store": {}}
+        for key in _index:
+            store: LocalSecretStore = self.get_store(key)
+            _index[key]['available'] = store.store_available
+            _index[key]['index'] = store.get_index()
+            _index[key]['read_only'] = store.store_read_only
+
+        return _index
 
     def _sort_stores(self):
         self.stores.sort(key=lambda x: x.store_priority)
@@ -71,13 +82,16 @@ class SecretsManager(object):
                     self.stores.append(AWSSecretsStore(store_priority=self.application_settings.get(
                         f'secrets_manager.cloud_stores.{store_name}.priority'),
                                                        store_name=store_name,
-                                                       application_settings=self.application_settings))
+                        cloud_session_manager=self.cloud_session_manager,
+                                                       application_settings=self.application_settings,
+                    ))
 
                 # Add Azure secret store
                 if self.application_settings.get(f'secrets_manager.cloud_stores.{store_name}.store_type') == 'azure':
                     self.stores.append(AzureSecretsStore(store_priority=self.application_settings.get(
                         f'secrets_manager.cloud_stores.{store_name}.priority'),
                                                          store_name=store_name,
+                        cloud_session_manager=self.cloud_session_manager,
                                                          application_settings=self.application_settings))
 
         # Sort stores based on priority
@@ -118,12 +132,16 @@ class SecretsManager(object):
 
         for store in self.stores:
             if store_name and store_name == store.store_name:
-                value = store.get_secret(key, None)
+                if store.store_available:
+                    value = store.get_secret(key, None)
+                else:
+                    logging.error(f'Store {store.store_name} is not available to retrieve secret.')
                 break
             elif not store_name:
-                value = store.get_secret(key, None)
-                if value:
-                    break
+                if store.store_available:
+                    value = store.get_secret(key, None)
+                    if value:
+                        break
 
         if not value:
             logging.debug(f'The Secret {key} was not found. Returning default value.')
@@ -144,7 +162,10 @@ class SecretsManager(object):
             store_name = 'User_Local_Store'
         for store in self.stores:
             if store_name == store.store_name:
-                store.set_secret(key, value)
+                if store.store_available and not store.store_read_only:
+                    store.set_secret(key, value)
+                else:
+                    logging.warning(f'Secrets Store {store.store_name} is either not available or is read only.')
                 break
 
     def delete_secret(self, key, store_name='User_Local_Store'):
@@ -159,6 +180,6 @@ class SecretsManager(object):
             True if the secret is deleted, else False.
         """
         for store in self.stores:
-            if store_name and store_name == store.priority():
+            if store_name and store_name == store.name():
                 value = store.delete_secret(key)
                 break

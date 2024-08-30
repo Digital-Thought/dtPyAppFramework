@@ -34,7 +34,7 @@ The following is an example of an Azure KeyVault being added to the applications
    secrets_manager:
      cloud_stores:
          my_secrets_store:
-           store_type: Azure
+           store_type: azure
            priority: 100
            azure_keyvault: name_of_key_vault 
            azure_identity_type: interactive_browser
@@ -54,18 +54,18 @@ You can define multiple instances of cloud stores, however, the name of each clo
      cloud_stores:
 
          my_secrets_store:
-           store_type: Azure
+           store_type: azure
            priority: 100
-           Azure_keyvault: name_of_key_vault 
-           Azure_identity_type: interactive_browser
-           Azure_tenant_id: 123 
+           azure_keyvault: name_of_key_vault
+           azure_identity_type: interactive_browser
+           azure_tenant_id: 123
 
          my_second_secrets_store:
-           store_type: Azure
+           store_type: azure
            priority: 110
-           Azure_keyvault: name_of_other_key_vault 
-           Azure_identity_type: interactive_browser
-           Azure_tenant_id: 890
+           azure_keyvault: name_of_other_key_vault
+           azure_identity_type: interactive_browser
+           azure_tenant_id: 890
 
 The following table details the keys and values which are supported when defining a cloud store:
 
@@ -80,7 +80,7 @@ The following table details the keys and values which are supported when definin
    * - store_type
      - str
      - YES
-     - ``Azure`` | ``aws``
+     - ``azure`` | ``aws``
      - Defines the type of cloud based secret store.
    * - priority
      - int
@@ -112,39 +112,39 @@ The following table details the keys and values which are supported when definin
      - If ``store_type`` is ``aws``
      - Specifies the name of the 'Secret name' this profile is to access.
      -
-   * - Azure_keyvault
+   * - azure_keyvault
      - str
-     - If ``store_type`` is ``Azure``
+     - If ``store_type`` is ``azure``
      - The name of the Azure KeyVault
      - Defines the name of the Azure KeyVault to be accessed.
-   * - Azure_identity_type
+   * - azure_identity_type
      - str
-     - If ``store_type`` is ``Azure``
+     - If ``store_type`` is ``azure``
      - ``interactive_browser`` | ``certificate`` | ``client_secret``
      - Defines the method of authentication to Azure.\ :raw-html-m2r:`<br>`\ `interactive_browser`: instructs to authenticate the user to Azure via an ineractive browser session.<br>`certificate`: Authenticates as a service principal using a certificate.\ :raw-html-m2r:`<br>`\ ``key``\ : Authenticates as a service principal using a client secret.
-   * - Azure_tenant_id
+   * - azure_tenant_id
      - str
-     - If ``store_type`` is ``Azure``
+     - If ``store_type`` is ``azure``
      - The ID of the tenant to authenticate to.
      - 
-   * - Azure_client_id
+   * - azure_client_id
      - str
-     - If ``Azure_identity_type`` is either ``certificate`` or ``key``
+     - If ``azure_identity_type`` is either ``certificate`` or ``key``
      - The service principal's client ID.
      - 
    * - certificate_path
      - str
-     - If ``Azure_identity_type`` is ``certificate``
+     - If ``azure_identity_type`` is ``certificate``
      - Path to a certificate file in PEM or PKCS12 format, including the private key.
      - 
    * - certificate_password
      - str
-     - If ``Azure_identity_type`` is ``certificate``
+     - If ``azure_identity_type`` is ``certificate``
      - The certificate's password.
      - 
    * - client_secret
      - str
-     - If ``Azure_identity_type`` is ``key``
+     - If ``azure_identity_type`` is ``key``
      - One of the service principal's client secrets.
      -
 
@@ -163,12 +163,12 @@ In the following example, we define an Azure KeyVault as a cloud store and use t
      cloud_stores:
 
          my_secrets_store:
-           store_type: Azure
+           store_type: azure
            priority: 100
-           Azure_keyvault: name_of_key_vault 
-           Azure_identity_type: key
+           azure_keyvault: name_of_key_vault
+           azure_identity_type: key
 
-The value for the ``Azure_tenant_id``\ , ``Azure_client_id`` and ``client_secret`` will be retrieved from either the Application, User or All Users KeyVault (depending on which the value was stored to).
+The value for the ``azure_tenant_id``\ , ``azure_client_id`` and ``client_secret`` will be retrieved from either the Application, User or All Users KeyVault (depending on which the value was stored to).
 The secret key name under which the values be stored must be in the format of:
 
 
@@ -228,11 +228,11 @@ In the following example we have defined two cloud stores to be included into ou
            aws_region: ap-southeast-2
 
          my_Azure_secrets_store:
-           store_type: Azure
+           store_type: azure
            priority: 200
-           Azure_keyvault: keyvault_name 
-           Azure_identity_type: interactive_browser
-           Azure_tenant_id: 123
+           azure_keyvault: keyvault_name
+           azure_identity_type: interactive_browser
+           azure_tenant_id: 123
 
 Say you have a secret named ``my.secret.key`` in the following KeyVaults with the indicated values:
 

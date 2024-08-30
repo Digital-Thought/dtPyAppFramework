@@ -6,6 +6,7 @@ from ...misc import run_cmd
 import boto3
 import logging
 
+
 class AWSSecretsStore(AbstractSecretStore):
     """
     A class representing an AWS Secrets Store for managing secrets.
@@ -20,7 +21,7 @@ class AWSSecretsStore(AbstractSecretStore):
         aws_secretsmanager (boto3.client): Boto3 client for AWS Secrets Manager.
     """
 
-    def __init__(self, store_priority, store_name, application_settings) -> None:
+    def __init__(self, store_priority, store_name, application_settings, cloud_session_manager) -> None:
         """
         Initialize the AWSSecretsStore.
 
@@ -31,42 +32,22 @@ class AWSSecretsStore(AbstractSecretStore):
         """
         super().__init__(store_name, "AWS_Secrets_Store", store_priority, application_settings)
 
+        self.cloud_session_manager = cloud_session_manager
+
         # Check if AWS CLI is installed
         if not which("aws"):
             raise SecretsStoreException("AWS Secrets Store requires the AWS Command Line Utility to be installed.")
 
-        # Get AWS profile
-        self.aws_profile = self.get_store_setting('aws_profile')
-        if not self.aws_profile:
-            raise SecretsStoreException('AWS Secrets Store is missing required aws_profile parameter.')
+        self.session_name = self.get_store_setting('session_name')
+        if not self.session_name:
+            raise SecretsStoreException('AWS Secrets Store is missing required session_name parameter.')
 
-        # Get AWS region
-        self.aws_region = self.get_store_setting('aws_region')
-        if not self.aws_region:
-            raise SecretsStoreException('AWS Secrets Store is missing required aws_region parameter.')
+        self.aws_session = self.cloud_session_manager.get_session(self.session_name)
 
-        self.aws_session = None
+        if not self.aws_session:
+            raise SecretsStoreException(f'AWS Secrets Store does not have a valid session for session name "{self.session_name}".')
 
         self.secret_name = self.get_store_setting('secret_name')
-
-        # Initialize AWS session based on profile type
-        if self.aws_profile == 'key':
-            aws_access_key_id = self.get_store_setting('aws_access_key_id')
-            aws_secret_access_key = self.get_store_setting('aws_secret_access_key')
-            if not aws_access_key_id or not aws_secret_access_key:
-                raise SecretsStoreException('AWS Secrets Store of type key requires both aws_access_key_id and aws_secret_access_key parameters.')
-            self.aws_session = boto3.session.Session(region_name=self.aws_region, aws_access_key_id=aws_access_key_id,
-                                                     aws_secret_access_key=aws_secret_access_key)
-        elif self.aws_profile == 'ec2':
-            self.aws_session = boto3.session.Session(region_name=self.aws_region)
-        elif self.aws_profile.startswith('sso'):
-            aws_sso_profile = self.aws_profile.split(':')[1]
-            aws_sso_resp = run_cmd(f'aws sso login --profile {aws_sso_profile}')
-            if not aws_sso_resp or "Successfully logged into Start URL" not in aws_sso_resp:
-                raise SecretsStoreException(f"Unable to initialise SSO for the AWS profile {aws_sso_profile}.")
-            self.aws_session = boto3.session.Session(region_name=self.aws_region)
-        else:
-            raise SecretsStoreException(f"Unrecognised AWS Profile type {self.aws_profile}.")
 
         # Initialize AWS Secrets Manager client
         self.aws_secretsmanager = self.aws_session.client('secretsmanager')

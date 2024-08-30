@@ -4,6 +4,7 @@ from azure.keyvault.secrets import SecretClient
 from azure.identity import DefaultAzureCredential, CertificateCredential, ClientSecretCredential, InteractiveBrowserCredential
 import logging
 
+
 class AzureSecretsStore(AbstractSecretStore):
     """
     A class representing an Azure Secrets Store for managing secrets.
@@ -24,7 +25,7 @@ class AzureSecretsStore(AbstractSecretStore):
         delete_secret(key): Delete a secret from Azure KeyVault.
     """
 
-    def __init__(self, store_priority, store_name, application_settings) -> None:
+    def __init__(self, store_priority, store_name, application_settings, cloud_session_manager) -> None:
         """
         Initialize the AzureSecretsStore.
 
@@ -34,6 +35,7 @@ class AzureSecretsStore(AbstractSecretStore):
             application_settings (Settings): An instance of Settings providing application settings.
         """
         super().__init__(store_name, "Azure_Secrets_Store", store_priority, application_settings)
+        self.cloud_session_manager = cloud_session_manager
 
         # Get Azure KeyVault URL
         self.azure_keyvault = self.get_store_setting('azure_keyvault')
@@ -41,38 +43,14 @@ class AzureSecretsStore(AbstractSecretStore):
             raise SecretsStoreException('Azure KeyVault Store is missing required azure_keyvault parameter.')
 
         # Get Azure identity type
-        self.azure_identity_type = self.get_store_setting('azure_identity_type')
-        if not self.azure_identity_type:
-            raise SecretsStoreException('Azure KeyVault Store is missing required azure_identity_type parameter.')
+        self.session_name = self.get_store_setting('session_name')
+        if not self.session_name:
+            raise SecretsStoreException('Azure KeyVault Store is missing required session_name parameter.')
 
-        # Get Azure Tenant ID
-        self.azure_tenant_id = self.get_store_setting('azure_tenant_id')
-        if not self.azure_tenant_id:
-            raise SecretsStoreException('Azure KeyVault Store is missing required azure_tenant_id parameter.')
+        credential = self.cloud_session_manager.get_session(self.session_name)
 
-        credential = None
-
-        # Initialize Azure credential based on identity type
-        if self.azure_identity_type == 'certificate':
-            azure_client_id = self.get_store_setting('azure_client_id')
-            certificate_path = self.get_store_setting('certificate_path')
-            if not azure_client_id or not certificate_path:
-                raise SecretsStoreException('Azure KeyVault Store of type key requires both azure_client_id and certificate_path parameters.')
-            certificate_password = self.get_store_setting('certificate_password')
-            credential = CertificateCredential(tenant_id=self.azure_tenant_id, client_id=azure_client_id,
-                                               certificate_path=certificate_path, password=certificate_password)
-        elif self.azure_identity_type == 'key':
-            azure_client_id = self.get_store_setting('azure_client_id')
-            client_secret = self.get_store_setting('client_secret')
-            if not azure_client_id or not client_secret:
-                raise SecretsStoreException(
-                    'Azure KeyVault Store of type key requires both azure_client_id and client_secret parameters.')
-            credential = ClientSecretCredential(tenant_id=self.azure_tenant_id, client_id=azure_client_id,
-                                               client_secret=client_secret)
-        elif self.azure_identity_type == 'interactive_browser':
-            credential = InteractiveBrowserCredential(tenant_id=self.azure_tenant_id)
-        else:
-            raise SecretsStoreException(f"Unrecognised Azure Identity Type {self.azure_identity_type}.")
+        if not credential:
+            raise SecretsStoreException(f'Azure KeyVault Store does not have a valid session for session name "{self.session_name}".')
 
         # Azure KeyVault URI
         self.kv_uri = f"https://{self.azure_keyvault}.vault.azure.net"

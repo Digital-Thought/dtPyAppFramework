@@ -34,7 +34,8 @@ class Settings(dict):
 
         self.settings_readers = []
         self.persistent_settings_stores = []
-        self.secret_manager = SecretsManager(application_paths=self.application_paths, application_settings=self)
+        self.secret_manager = None
+        self.cloud_session_manager = None
 
         super().__init__()
 
@@ -46,6 +47,11 @@ class Settings(dict):
         self.settings_readers.append(SettingsReader(self.application_paths.app_data_root_path, 200))
         self.settings_readers.append(SettingsReader(self.application_paths.usr_data_root_path, 100))
         self.settings_readers.sort(key=lambda x: x.priority)
+
+        from ..cloud import CloudSessionManager
+        self.cloud_session_manager = CloudSessionManager()
+        self.secret_manager = SecretsManager(application_paths=self.application_paths, application_settings=self,
+                                             cloud_session_manager=self.cloud_session_manager)
 
     def get_requests_tor_proxy(self) -> dict:
         """
@@ -168,9 +174,10 @@ class Settings(dict):
         Returns:
             Value of the item.
         """
-        persistent_value = self.secret_manager.get_secret(key)
-        if persistent_value:
-            return persistent_value
+        if self.secret_manager is not None:
+            persistent_value = self.secret_manager.get_secret(key)
+            if persistent_value:
+                return persistent_value
 
         value = None
         for reader in self.settings_readers:
