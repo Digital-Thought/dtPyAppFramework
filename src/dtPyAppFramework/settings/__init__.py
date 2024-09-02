@@ -55,6 +55,20 @@ class Settings(dict):
         self.secret_manager = SecretsManager(application_paths=self.application_paths, application_settings=self,
                                              cloud_session_manager=self.cloud_session_manager)
 
+    def persist_settings(self, settings, scope):
+        if scope == 'app':
+            p = os.path.join(os.getcwd(), "config")
+        elif scope == 'all_user':
+            p = self.application_paths.app_data_root_path
+        elif scope == 'current_user':
+            p = self.application_paths.usr_data_root_path
+        else:
+            raise Exception(f'The Settings Scope "{scope}" is not recognised.')
+
+        p = os.path.join(p, 'config.yaml')
+        with open(p, 'w') as i_set:
+            i_set.write(settings)
+
     def get_raw_settings(self):
         raw_settings = {}
 

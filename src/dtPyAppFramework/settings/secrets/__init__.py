@@ -59,9 +59,13 @@ class SecretsManager(object):
         _index = {"User_Local_Store": {}, "App_Local_Store": {}}
         for key in _index:
             store: LocalSecretStore = self.get_store(key)
-            _index[key]['available'] = store.store_available
-            _index[key]['index'] = store.get_index()
-            _index[key]['read_only'] = store.store_read_only
+            try:
+                _index[key]['available'] = store.store_available
+                _index[key]['index'] = store.get_index()
+                _index[key]['read_only'] = store.store_read_only
+            except Exception as ex:
+                logging.error(str(ex))
+                _index[key]['available'] = False
 
         return _index
 
