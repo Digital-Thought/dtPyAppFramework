@@ -148,7 +148,8 @@ class LocalSecretStore(AbstractSecretStore):
         self.store.setPassword(account=key, password=value)
         self.__save()
         index = self.get_index()
-        index.append(key)
+        if key not in index:
+            index.append(key)
         self.__set_index(index)
 
     def delete_secret(self, key):
@@ -161,7 +162,8 @@ class LocalSecretStore(AbstractSecretStore):
         entry = self.store.setPassword(account=key, password='NONE')
         self.__save()
         index = self.get_index()
-        index.remove(key)
+        while key in index:
+            index.remove(key)
         self.__set_index(index)
 
     def __set_index(self, index: list):
