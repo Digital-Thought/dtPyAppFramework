@@ -88,13 +88,13 @@ class Settings(dict):
                 with open(p, 'r') as i_set:
                     raw_settings[key]['raw_data'] = i_set.read()
 
-                try:
-                    with open(p, 'w') as o_set:
-                        o_set.write(raw_settings[key]['raw_data'])
-                    raw_settings[key]['read_only'] = False
-                except Exception as ex:
-                    logging.exception(str(ex))
-                    raw_settings[key]['read_only'] = True
+            try:
+                with open(p, 'w') as o_set:
+                    o_set.write(raw_settings[key]['raw_data'])
+                raw_settings[key]['read_only'] = False
+            except Exception as ex:
+                logging.error(str(ex))
+                raw_settings[key]['read_only'] = True
 
         return raw_settings
 
