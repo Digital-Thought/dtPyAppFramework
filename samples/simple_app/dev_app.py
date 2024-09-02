@@ -19,7 +19,7 @@ class SimpleApp(AbstractApp):
         logging.info("Running your code")
         logging.info(f'Secrets Store Index : {Settings().secret_manager.get_local_stores_index()}')
         Settings()['bob'] = 'hellow world'
-        logging.info('setting bob')
+        logging.info(Settings().get_raw_settings())
         logging.info(f'All Key/Value Pairs in the Secret for cloud store "test1" : {Settings().get("test1")}')
         logging.info(f'All Key/Value Pairs in the Secret for cloud store "test_setting.bob" : {Settings().get("test_setting.bob")}')
         logging.debug(f'All Key/Value Pairs in the Secret for cloud store "test_setting.bob" : {Settings().get("test_setting.bob")}')

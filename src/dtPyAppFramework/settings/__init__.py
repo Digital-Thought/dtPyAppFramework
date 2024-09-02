@@ -1,3 +1,5 @@
+import logging
+
 from ..paths import ApplicationPaths
 from ..decorators import singleton
 from .settings_reader import SettingsReader
@@ -52,6 +54,35 @@ class Settings(dict):
         self.cloud_session_manager = CloudSessionManager()
         self.secret_manager = SecretsManager(application_paths=self.application_paths, application_settings=self,
                                              cloud_session_manager=self.cloud_session_manager)
+
+    def get_raw_settings(self):
+        raw_settings = {}
+
+        for key in ['app', 'all_user', 'current_user']:
+            raw_settings[key] = {'read_only': False, 'raw_data': ''}
+
+            p = None
+            if key == 'app':
+                p = os.path.join(os.getcwd(), "config")
+            elif key == 'all_user':
+                p = self.application_paths.app_data_root_path
+            elif key == 'current_user':
+                p = self.application_paths.usr_data_root_path
+
+            p = os.path.join(p, 'config.yaml')
+            if os.path.exists(p):
+                with open(p, 'r') as i_set:
+                    raw_settings[key]['raw_data'] = i_set.read()
+
+                try:
+                    with open(p, 'w') as o_set:
+                        o_set.write(raw_settings[key]['raw_data'])
+                    raw_settings[key]['read_only'] = False
+                except Exception as ex:
+                    logging.exception(str(ex))
+                    raw_settings[key]['read_only'] = True
+
+        return raw_settings
 
     def get_requests_tor_proxy(self) -> dict:
         """
