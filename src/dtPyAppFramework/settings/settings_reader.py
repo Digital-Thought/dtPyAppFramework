@@ -33,8 +33,13 @@ class SettingsReader(dict):
         """
         Load settings from the YAML file and update the dictionary.
         """
-        with open(self.settings_file, 'r', encoding='UTF-8') as file:
-            self.update(yaml.safe_load(file))
+        try:
+            with open(self.settings_file, 'r', encoding='UTF-8') as file:
+                self.update(yaml.safe_load(file))
+        except Exception as ex:
+            logging.error(f'Error reading in settings file {self.settings_file}. {str(ex)}')
+            print(f'Error reading in settings file {self.settings_file}. {str(ex)}')
+
 
     def clear(self) -> None:
         """
