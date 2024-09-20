@@ -1,5 +1,5 @@
 [project]
-name = { file = "src/dtPyAppFramework/_name.txt" }
+name = "dtPyAppFramework"
 description = { file = "src/dtPyAppFramework/_description.txt" }
 keywords = ["framework", "logging", "secrets", "settings"]
 requires-python = ">=3.9"
