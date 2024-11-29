@@ -2,14 +2,10 @@ import os
 import sys
 sys.path.insert(0, os.path.abspath('../src'))
 
-from dtPyAppFramework.misc.packaging import load_module_package, ModulePackage
-
-module_package: ModulePackage = load_module_package(os.path.join('../src/dtPyAppFramework', '_metadata.yaml'))
-
-project = module_package.short_name
+project = 'dtPyAppFramework'
 author = 'Digital-Thought'
 copyright = '2024, Digital-Thought'
-release = module_package.version
+release = '2.1'
 
 extensions = [
     'sphinx.ext.autodoc',
