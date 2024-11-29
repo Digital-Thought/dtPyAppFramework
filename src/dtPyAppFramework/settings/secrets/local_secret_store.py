@@ -8,7 +8,9 @@ import pybase64
 from .secret_store import AbstractSecretStore, SecretsStoreException
 from itertools import cycle
 from ...misc import run_cmd
-import pykeystore
+
+from .keystore import PasswordProtectedKeystoreWithHMAC
+
 from base64 import urlsafe_b64encode
 
 
@@ -48,41 +50,22 @@ class LocalSecretStore(AbstractSecretStore):
             password (str): Password for the local secret store (default: None).
         """
         super().__init__(store_name, 'local', store_priority, application_settings)
-        self.store_path = os.path.join(root_store_path, f"{app_short_name}.keystore")
+        if os.path.exists(os.path.join(root_store_path, f"{app_short_name}.keystore")):
+            logging.warning(f'Old Keystore file "{os.path.join(root_store_path, f"{app_short_name}.keystore")}" is no longer supported.')
+        self.store_path = os.path.join(root_store_path, f"{app_short_name}.v2keystore")
 
         # If password is not provided, generate a unique password
         if password is None:
             password = self.__guid()
 
         try:
-            # If the store does not exist, initialize it
-            if not os.path.exists(self.store_path):
-                self.store = self.__initialise_secrets_store(password)
-
             # Try to load the existing store
-            self.store = pykeystore.KeyStoreEx.load(self.store_path, password)
+            self.store = PasswordProtectedKeystoreWithHMAC(self.store_path, password)
             self.store_available = True
             self.store_read_only = not self.__is_writeable()
             logging.info(f'Successfully opened Secrets Store: {self.store_path}')
         except Exception as ex:
             raise SecretsStoreException(f'Failed to open Secrets Store: {self.store_path}. Error: {str(ex)}')
-
-    def __initialise_secrets_store(self, password):
-        """
-        Initialize the secrets store if it doesn't exist.
-
-        Args:
-            password (str): Password for the local secret store.
-
-        Returns:
-            Initialized secrets store.
-        """
-        try:
-            store = pykeystore.KeyStoreEx.create(self.store_path, password)
-            return store
-        except Exception as ex:
-            logging.error(f'Failed to create Secrets Store.  Error: {str(ex)}')
-            raise ex
 
     def __guid(self):
         """
@@ -115,7 +98,7 @@ class LocalSecretStore(AbstractSecretStore):
         base += self.store_path
         key = re.sub("[^a-zA-Z]+", "", base)
         xored = ''.join(chr(ord(x) ^ ord(y)) for (x, y) in zip(base, cycle(key)))
-        return urlsafe_b64encode(pybase64.b64encode_as_string(xored.encode())[:32].encode())
+        return urlsafe_b64encode(pybase64.b64encode_as_string(xored.encode())[:32].encode()).decode()
 
     def get_secret(self, key, default_value=None):
         """
@@ -128,11 +111,19 @@ class LocalSecretStore(AbstractSecretStore):
         Returns:
             Secret value if found, else default_value.
         """
-        entry = self.store.getPassword(account=key)
+        entry = self.store.get(key=key)
         if not entry or entry == 'NONE':
             return default_value
 
         return entry
+
+    def set_persistent_setting(self, key, value):
+        if self.get_secret(key):
+            self.delete_secret(key)
+
+        self.store.set(key=key, value=value)
+        self.__save()
+
 
     def set_secret(self, key, value):
         """
@@ -145,7 +136,7 @@ class LocalSecretStore(AbstractSecretStore):
         if self.get_secret(key):
             self.delete_secret(key)
 
-        self.store.setPassword(account=key, password=value)
+        self.store.set(key=key, value=value)
         self.__save()
         index = self.get_index()
         if key not in index:
@@ -159,7 +150,7 @@ class LocalSecretStore(AbstractSecretStore):
         Args:
             key (str): Key of the secret.
         """
-        entry = self.store.setPassword(account=key, password='NONE')
+        self.store.delete(key=key)
         self.__save()
         index = self.get_index()
         while key in index:
@@ -168,7 +159,7 @@ class LocalSecretStore(AbstractSecretStore):
 
     def __set_index(self, index: list):
         logging.info(index)
-        self.store.setPassword(account=f'{self.store_name}.INDEX', password=json.dumps(index))
+        self.store.set(key=f'{self.store_name}.INDEX', value=json.dumps(index))
         self.__save()
 
     def get_index(self) -> list:
@@ -181,7 +172,8 @@ class LocalSecretStore(AbstractSecretStore):
 
     def __save(self):
         """Save the changes made to the local secret store."""
-        self.store.save(self.store_path, self.__guid())
+        self.store.set('sstore_save', 'true')
+        self.store.delete('sstore_save')
 
     def __is_writeable(self):
         try:
