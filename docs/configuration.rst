@@ -2,7 +2,7 @@
 Settings and Configuration
 ==========================
 
-The **\ ``Settings``\ ** class manages application settings. It provides methods to define, get, and set settings. Settings can be read from various sources, including configuration files and environment variables.
+The **``Settings``** class manages application settings. It provides methods to define, get, and set settings. Settings can be read from various sources, including configuration files and environment variables.
 
 Configuration File Locations
 ----------------------------
@@ -10,21 +10,21 @@ Configuration File Locations
 The library searches for the existence of the ``config.yaml`` file in the following locations:
 
 
-#. 
+#.
    **Root of the Application:**
 
 
    * Path: ``os.getcwd()``
    * Priority: Lowest
 
-#. 
+#.
    **All Users Configuration:**
 
 
    * Path: ``{CommonApplicationData}/{simple_name}/config.yaml`` (e.g., ``C:/ProgramData/{simple_name}/config.yaml`` on Windows)
    * Priority: Medium
 
-#. 
+#.
    **User-Specific Configuration:**
 
 

@@ -5,14 +5,12 @@ The following provides an example of accessing a secrets value from an AWS Secre
 
 For the purpose of this example, we have created a sample "Secrets" in AWS, Secrets Manager:
 
-.. image:: aws_secrets.jpg
-   :target: aws_secrets.jpg
+.. image:: _static/aws_secrets.jpg
    :alt: AWS Secrets
 
 This secret has been setup as a 'Key/value' pair:
 
-.. image:: aws_secret_config.jpg
-   :target: aws_secret_config.jpg
+.. image:: _static/aws_secret_config.jpg
    :alt: AWS Secrets Config
 
 Define the AWS Secrets Manager within the `config.yaml` file

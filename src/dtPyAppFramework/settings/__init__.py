@@ -177,7 +177,7 @@ class Settings(dict):
             value: Value to set.
             store_name (str, optional): Name of the store for persistent settings.
         """
-        self.secret_manager.set_secret(key, value, store_name)
+        self.secret_manager.set_persistent_setting(key, value)
 
     def __getattr__(self, key):
         """

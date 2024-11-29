@@ -3,10 +3,10 @@ colorlog
 psutil
 pybase64
 boto3
-cryptography==39.0.2
+cryptography
 azure-identity
 azure-keyvault-secrets
-pykeystore
 pytest-mock
 pytest-watch
 pytest
+watchdog

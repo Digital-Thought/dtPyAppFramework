@@ -153,6 +153,15 @@ class SecretsManager(object):
 
         return value
 
+    def set_persistent_setting(self, key, value):
+        for store in self.stores:
+            if 'User_Local_Store' == store.store_name:
+                if store.store_available and not store.store_read_only:
+                    store.set_persistent_setting(key, value)
+                else:
+                    logging.warning(f'Secrets Store {store.store_name} is either not available or is read only.')
+                break
+
     def set_secret(self, key, value, store_name='User_Local_Store'):
         """
         Set a secret in the specified secret store.

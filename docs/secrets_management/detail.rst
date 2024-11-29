@@ -36,7 +36,7 @@ The following is an example of an Azure KeyVault being added to the applications
          my_secrets_store:
            store_type: azure
            priority: 100
-           azure_keyvault: name_of_key_vault 
+           azure_keyvault: name_of_key_vault
            azure_identity_type: interactive_browser
            azure_tenant_id: 123
 
@@ -126,22 +126,22 @@ The following table details the keys and values which are supported when definin
      - str
      - If ``store_type`` is ``azure``
      - The ID of the tenant to authenticate to.
-     - 
+     -
    * - azure_client_id
      - str
      - If ``azure_identity_type`` is either ``certificate`` or ``key``
      - The service principal's client ID.
-     - 
+     -
    * - certificate_path
      - str
      - If ``azure_identity_type`` is ``certificate``
      - Path to a certificate file in PEM or PKCS12 format, including the private key.
-     - 
+     -
    * - certificate_password
      - str
      - If ``azure_identity_type`` is ``certificate``
      - The certificate's password.
-     - 
+     -
    * - client_secret
      - str
      - If ``azure_identity_type`` is ``key``
@@ -155,7 +155,7 @@ Depending on the method you choose to use to authenticate to either AWS or Azure
 
 It is not recommended to place access keys, client secrets, passwords or other such information as plain text into the ``config.yaml`` file.  Instead, either the Application, User or All Users KeyVault can be used.
 
-In the following example, we define an Azure KeyVault as a cloud store and use the ``key`` method for authentication but have not defined the required ``Azure_tenant_id``\ , ``Azure_client_id`` or ``client_secret`` values within the ``config.yaml``. 
+In the following example, we define an Azure KeyVault as a cloud store and use the ``key`` method for authentication but have not defined the required ``Azure_tenant_id``\ , ``Azure_client_id`` or ``client_secret`` values within the ``config.yaml``.
 
 .. code-block:: yaml
 
@@ -224,7 +224,7 @@ In the following example we have defined two cloud stores to be included into ou
          my_aws_secrets_store:
            store_type: aws
            priority: 100
-           aws_profile: ec2 
+           aws_profile: ec2
            aws_region: ap-southeast-2
 
          my_Azure_secrets_store:
