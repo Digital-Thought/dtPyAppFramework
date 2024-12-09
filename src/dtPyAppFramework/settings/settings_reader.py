@@ -39,9 +39,11 @@ class ConfigFileWatcher(FileSystemEventHandler):
                 logging.warning(f'Config Watch File Deleted: {event.src_path}')
                 self.delete_action()
             elif event.event_type == 'modified':
-                if self.calculate_sha256(event.src_path) != self.watch_file_sha256:
-                    logging.warning(f'Config Watch File Changed: {event.src_path}')
-                    self.watch_file_sha256 = self.calculate_sha256(event.src_path)
+                new_sha256 = self.calculate_sha256(event.src_path)
+                if new_sha256 != self.watch_file_sha256:
+                    logging.warning(f'Config Watch File Changed: {event.src_path} - WAS: {self.watch_file_sha256},'
+                                    f' NOW: {new_sha256}')
+                    self.watch_file_sha256 = new_sha256
                     self.change_action()
             elif event.event_type == 'created':
                 logging.warning(f'Config Watch File Created: {event.src_path}')
@@ -88,7 +90,8 @@ class SettingsReader(dict):
         event_handler = ConfigFileWatcher(change_action=self.load_yaml_file, delete_action=super().clear,
                                           watch_file=self.CONFIG_FILE, watch_folder=path)
         self.observer.schedule(event_handler, path, recursive=False)
-        self.observer.start()
+        if os.path.exists(path):
+            self.observer.start()
 
         super().__init__()
 

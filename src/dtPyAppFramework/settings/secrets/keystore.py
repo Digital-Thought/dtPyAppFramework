@@ -57,7 +57,7 @@ class PasswordProtectedKeystoreWithHMAC:
             algorithm=SHA256(),
             length=32,
             salt=salt,
-            iterations=100_000,
+            iterations=20_000,
             backend=default_backend()
         )
         return base64.urlsafe_b64encode(kdf.derive(self.password))
