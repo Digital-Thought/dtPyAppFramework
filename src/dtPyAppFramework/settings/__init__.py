@@ -36,12 +36,15 @@ class Settings(dict):
 
         self.settings_readers = []
         self.persistent_settings_stores = []
-        self.secret_manager = None
+        self.secret_manager: SecretsManager = None
         self.cloud_session_manager = None
 
         super().__init__()
 
-    def init_settings_readers(self):
+    def close(self):
+        self.secret_manager.close()
+
+    def init_settings_readers(self, pipe_registry=None):
         """
         Initialize settings readers.
         """
@@ -53,7 +56,7 @@ class Settings(dict):
         from ..cloud import CloudSessionManager
         self.cloud_session_manager = CloudSessionManager()
         self.secret_manager = SecretsManager(application_paths=self.application_paths, application_settings=self,
-                                             cloud_session_manager=self.cloud_session_manager)
+                                             cloud_session_manager=self.cloud_session_manager, pipe_registry=pipe_registry)
 
     def persist_settings(self, settings, scope):
         if scope == 'app':

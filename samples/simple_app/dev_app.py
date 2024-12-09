@@ -24,12 +24,14 @@ class SimpleApp(AbstractApp):
         logging.info(f'All Key/Value Pairs in the Secret for cloud store "test_setting.bob" : {Settings().get("test_setting.bob")}')
         logging.debug(f'All Key/Value Pairs in the Secret for cloud store "test_setting.bob" : {Settings().get("test_setting.bob")}')
         logging.info(f'All Key/Value Pairs in the Secret for cloud store "test_setting.app_core" : {Settings().get("test_setting.app_core")}')
-        Settings().secret_manager.delete_secret('bob')
+        Settings().secret_manager.set_secret('bob', 'hello world')
         # logging.info(f'Just the value for "key1" in the Secret for cloud store "test1" : {settings.Settings()['test1.key1']}')
 
+    def exiting(self):
+        logging.info('Put your custom exiting process here!')
 
 
- #def new_multiprocessing_job(self, job_name, worker_count, target, args=(), kwargs={}):
+#def new_multiprocessing_job(self, job_name, worker_count, target, args=(), kwargs={}):
 os.environ['DEV_MODE'] = "True"
 SimpleApp(description="Simple App", version="1.0", short_name="simple_app",
              full_name="Simple Application", console_app=True).run()

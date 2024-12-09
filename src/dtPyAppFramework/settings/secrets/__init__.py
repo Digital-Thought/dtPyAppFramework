@@ -4,6 +4,7 @@ from ...decorators import singleton
 from .local_secret_store import LocalSecretStore
 from .aws_secret_store import AWSSecretsStore
 from .azure_secret_store import AzureSecretsStore
+from .local_secret_stores_manager import LocalSecretStoresManager
 
 
 @singleton()
@@ -17,7 +18,7 @@ class SecretsManager(object):
         stores (list): A list to hold different secret stores.
     """
 
-    def __init__(self, application_paths=None, application_settings=None, cloud_session_manager=None) -> None:
+    def __init__(self, application_paths=None, application_settings=None, cloud_session_manager=None, pipe_registry=None) -> None:
         """
         Initialize the SecretsManager.
 
@@ -35,39 +36,16 @@ class SecretsManager(object):
         if not self.application_paths:
             self.application_paths = ApplicationPaths()
 
-        # Add local user secret store
-        self.stores.append(LocalSecretStore(store_name="User_Local_Store",
-                                            store_priority=-0,
-                                            root_store_path=self.application_paths.usr_data_root_path,
-                                            application_settings=self.application_settings,
-                                            app_short_name=self.application_paths.app_short_name))
+        self.local_secrets_store_manager = LocalSecretStoresManager(application_paths, application_settings,
+                                                                    pipe_registry)
+        self.store_names.extend(self.local_secrets_store_manager.store_names)
 
-        try:
-            # Add local app secret store (if it exists)
-            self.stores.append(LocalSecretStore(store_name="App_Local_Store",
-                                                store_priority=1,
-                                                root_store_path=self.application_paths.app_data_root_path,
-                                                application_settings=self.application_settings,
-                                                app_short_name=self.application_paths.app_short_name))
-        except Exception as ex:
-            print(f'Skipping APP Local Secret Store. {ex}')
 
-        # Sort stores based on priority
-        self._sort_stores()
+    def close(self):
+        self.local_secrets_store_manager.close()
 
     def get_local_stores_index(self):
-        _index = {"User_Local_Store": {}, "App_Local_Store": {}}
-        for key in _index:
-            store: LocalSecretStore = self.get_store(key)
-            try:
-                _index[key]['available'] = store.store_available
-                _index[key]['index'] = store.get_index()
-                _index[key]['read_only'] = store.store_read_only
-            except Exception as ex:
-                logging.error(str(ex))
-                _index[key]['available'] = False
-
-        return _index
+        return self.local_secrets_store_manager.get_local_stores_index()
 
     def _sort_stores(self):
         self.stores.sort(key=lambda x: x.store_priority)
@@ -134,18 +112,22 @@ class SecretsManager(object):
             store_name = elements[0]
             key = elements[1]
 
-        for store in self.stores:
-            if store_name and store_name == store.store_name:
-                if store.store_available:
-                    value = store.get_secret(key, None)
-                else:
-                    logging.error(f'Store {store.store_name} is not available to retrieve secret.')
-                break
-            elif not store_name:
-                if store.store_available:
-                    value = store.get_secret(key, None)
-                    if value:
-                        break
+        if store_name is None or store_name in ['User_Local_Store', 'App_Local_Store']:
+            value = self.local_secrets_store_manager.get_secret(key, value, store_name)
+
+        if not value:
+            for store in self.stores:
+                if store_name and store_name == store.store_name:
+                    if store.store_available:
+                        value = store.get_secret(key, None)
+                    else:
+                        logging.error(f'Store {store.store_name} is not available to retrieve secret.')
+                    break
+                elif not store_name:
+                    if store.store_available:
+                        value = store.get_secret(key, None)
+                        if value:
+                            break
 
         if not value:
             logging.debug(f'The Secret {key} was not found. Returning default value.')
@@ -173,6 +155,10 @@ class SecretsManager(object):
         """
         if not store_name:
             store_name = 'User_Local_Store'
+
+        if store_name in ['User_Local_Store', 'App_Local_Store']:
+            return self.local_secrets_store_manager.set_secret(key, value, store_name)
+
         for store in self.stores:
             if store_name == store.store_name:
                 if store.store_available and not store.store_read_only:

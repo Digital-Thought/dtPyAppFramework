@@ -45,7 +45,7 @@ class ProcessManager():
         stderr_txt_file (file): File object for capturing stderr to a text file.
     """
 
-    def __init__(self, description, version, short_name, full_name, console_app, main_procedure):
+    def __init__(self, description, version, short_name, full_name, console_app, main_procedure, exit_procedure=None):
         super().__init__()
         # Initialization of attributes
         self.description = description
@@ -59,11 +59,12 @@ class ProcessManager():
         self.resource_manager = None
         self.log_path = None
         self.main_procedure = main_procedure
+        self.exit_procedure = exit_procedure
         self.multiprocessing_manager = None
         self.stdout_txt_file = None
         self.stderr_txt_file = None
 
-    def __initialise_spawned_application__(self, parent_log_path, job_id, worker_id, job_name):
+    def __initialise_spawned_application__(self, parent_log_path, job_id, worker_id, job_name, pipe_registry):
         """
         Initialize a spawned instance of the application in a multiprocessing environment.
 
@@ -84,7 +85,7 @@ class ProcessManager():
                                                                spawned_process=True,
                                                                job_id=job_id, worker_id=worker_id,
                                                                parent_log_path=parent_log_path)
-                self.application_settings.init_settings_readers()
+                self.application_settings.init_settings_readers(pipe_registry=pipe_registry)
                 self.application_settings.secret_manager.load_cloud_stores()
 
                 self.__initialise_stdout_capt__()
@@ -151,6 +152,8 @@ class ProcessManager():
 
         except KeyboardInterrupt as kbi:
             logging.warning('(KeyboardInterrupt) Exiting application.')
+            if self.exit_procedure:
+                self.exit_procedure()
             if not self.console_app:
                 self.stdout_txt_file.close()
                 self.stderr_txt_file.close()
@@ -184,3 +187,6 @@ class ProcessManager():
         """
         self.load_config()
         self.main_procedure(args)
+
+        if self.exit_procedure:
+            self.exit_procedure()

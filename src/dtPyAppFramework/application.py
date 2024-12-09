@@ -89,6 +89,9 @@ class AbstractApp(object):
         """
         raise NotImplementedError
 
+    def exiting(self):
+        raise NotImplementedError
+
     def __define_args(self, arg_parser: ArgumentParser):
         """
         Define command-line arguments based on application state.
@@ -116,6 +119,11 @@ class AbstractApp(object):
             arg_parser.add_argument('--name', action='store', type=str, required=True, help="Secret Name")
             arg_parser.add_argument('--value', action='store', type=str, required=True, help="Secret Value")
 
+    def exit(self):
+        self.exiting()
+        from dtPyAppFramework.settings import Settings
+        Settings().close()
+
     def run(self):
         """
         Run the application.
@@ -124,5 +132,6 @@ class AbstractApp(object):
         self.__define_args(arg_parser)
         self.process_manager = ProcessManager(description=self.description, version=self.version,
                                               short_name=self.short_name, full_name=self.full_name,
-                                              console_app=self.console_app, main_procedure=self.main)
+                                              console_app=self.console_app, main_procedure=self.main,
+                                              exit_procedure=self.exit)
         self.process_manager.initialise_application(arg_parser)

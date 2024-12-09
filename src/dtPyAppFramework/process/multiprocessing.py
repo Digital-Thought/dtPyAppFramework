@@ -1,6 +1,7 @@
 from ..decorators import singleton
 from multiprocessing import Process, Manager
 from ..paths import ApplicationPaths
+from dtPyAppFramework.settings import Settings
 
 import sys
 import os
@@ -25,7 +26,7 @@ def get_new_uuid():
 
 
 @singleton()
-class MultiProcessingManager():
+class MultiProcessingManager:
     """
     Singleton class for managing multiprocessing operations.
 
@@ -36,6 +37,7 @@ class MultiProcessingManager():
     def __init__(self):
         super().__init__()
         self.log_path = None
+        self.jobs = {}
 
     def set_log_path(self, log_path):
         """
@@ -45,6 +47,11 @@ class MultiProcessingManager():
             log_path (str): Path to the log folder.
         """
         self.log_path = log_path
+
+    def get_job(self, job_name):
+        if job_name not in self.jobs:
+            return None
+        return self.jobs[job_name]
 
     def new_multiprocessing_job(self, job_name, worker_count, target, args=(), kwargs={}):
         """
@@ -60,7 +67,9 @@ class MultiProcessingManager():
         Returns:
             MultiProcessingJob: An instance of MultiProcessingJob.
         """
-        return MultiProcessingJob(self.log_path, job_name, worker_count, target, args, kwargs)
+        job = MultiProcessingJob(self.log_path, job_name, worker_count, target, args, kwargs)
+        self.jobs[job_name] = job
+        return job
 
 
 class MultiProcessingJob():
@@ -94,8 +103,9 @@ class MultiProcessingJob():
         Start the worker processes for the job.
         """
         for x in range(self.worker_count):
-            worker = DtProcess(self.log_path, self.job_id, self.job_name, self.target, self.job_name, self.args,
-                               self.kwargs)
+            pipe_registry = Settings().secret_manager.local_secrets_store_manager.server_thread.pipe_registry
+            worker = DtProcess(self.log_path, self.job_id, self.job_name, self.target, self.job_name, pipe_registry,
+                               self.args, self.kwargs)
             worker.start()
             logging.info(f'Started Worker {worker.worker_id} for Job ID {self.job_id} ({self.job_name}).')
             self.workers.append(worker)
@@ -107,6 +117,8 @@ class MultiProcessingJob():
         for worker in self.workers:
             worker.join()
         logging.info(f'All Workers for Job ID {self.job_id} ({self.job_name}) ended.')
+
+
 
 
 class DtProcess(Process):
@@ -121,12 +133,14 @@ class DtProcess(Process):
         multi_processing_job (MultiProcessingJob): Reference to the parent MultiProcessingJob.
     """
 
-    def __init__(self, parent_log_path, job_id, job_name, target=None, name=None, args=(), kwargs={}):
+    def __init__(self, parent_log_path, job_id, job_name, target=None, name=None, pipe_registry=None,
+                 args=(), kwargs={}):
         self.worker_id = get_new_uuid()
         self.job_id = job_id
         self.job_name = job_name
         self.parent_log_path = parent_log_path
         self.multi_processing_job = None
+        self.pipe_registry = pipe_registry
         super(DtProcess, self).__init__(target=target, name=name, args=args, kwargs=kwargs)
 
     def set_parent(self, job):
@@ -144,8 +158,9 @@ class DtProcess(Process):
         """
         from . import ProcessManager
         ProcessManager().__initialise_spawned_application__(self.parent_log_path, self.job_id, self.worker_id,
-                                                            self.job_name)
+                                                            self.job_name, self.pipe_registry)
         print(f'Process ID = {os.getpid()}')
         print(f'worker_id {os.getpid()} = {self.worker_id}')
         print(f'job_id {os.getpid()} = {self.job_id}')
         super().run()
+        Settings().secret_manager.close()

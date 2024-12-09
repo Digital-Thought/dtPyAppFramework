@@ -122,7 +122,6 @@ class LocalSecretStore(AbstractSecretStore):
             self.delete_secret(key)
 
         self.store.set(key=key, value=value)
-        self.__save()
 
 
     def set_secret(self, key, value):
@@ -137,7 +136,6 @@ class LocalSecretStore(AbstractSecretStore):
             self.delete_secret(key)
 
         self.store.set(key=key, value=value)
-        self.__save()
         index = self.get_index()
         if key not in index:
             index.append(key)
@@ -151,7 +149,6 @@ class LocalSecretStore(AbstractSecretStore):
             key (str): Key of the secret.
         """
         self.store.delete(key=key)
-        self.__save()
         index = self.get_index()
         while key in index:
             index.remove(key)
@@ -160,7 +157,6 @@ class LocalSecretStore(AbstractSecretStore):
     def __set_index(self, index: list):
         logging.info(index)
         self.store.set(key=f'{self.store_name}.INDEX', value=json.dumps(index))
-        self.__save()
 
     def get_index(self) -> list:
         index = self.get_secret(f'{self.store_name}.INDEX', None)
@@ -170,14 +166,10 @@ class LocalSecretStore(AbstractSecretStore):
 
         return json.loads(index)
 
-    def __save(self):
-        """Save the changes made to the local secret store."""
-        self.store.set('sstore_save', 'true')
-        self.store.delete('sstore_save')
-
     def __is_writeable(self):
         try:
-            self.__save()
+            self.store.set('sstore_save', 'true')
+            self.store.delete('sstore_save')
             return True
         except Exception as ex:
             logging.warning(str(ex))
