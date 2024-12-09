@@ -211,12 +211,9 @@ class LocalSecretStoresManager:
             self.server_thread.pipe_registry.put(control_pipe_parent)
 
         elif self.pipe_registry is not None:
-            logging.info('t')
             parent_conn, self.child_connection = multiprocessing.Pipe()
-            logging.info('3')
             self.pipe_registry = pipe_registry
             self.pipe_registry.put(parent_conn)
-            logging.info('4')
 
         else:
             logging.error('Unexpected State for LocalSecretStoresManager')
