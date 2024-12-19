@@ -173,7 +173,9 @@ class ProcessManager():
             args: Parsed command-line arguments.
         """
         try:
-            self.application_settings.secrets_manager.set_secret(args.name, args.value)
+            settings.SecretsManager().set_secret(args.name, args.value)
+            logging.info(f'Added secret "{args.name}" to Secret Store.')
+            settings.Settings().close()
         except Exception as ex:
             logging.error(f'Error occurred while adding secret {args.name}.  Error: {str(ex)}')
             raise ex
