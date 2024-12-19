@@ -155,7 +155,6 @@ class LocalSecretStore(AbstractSecretStore):
         self.__set_index(index)
 
     def __set_index(self, index: list):
-        logging.info(index)
         self.store.set(key=f'{self.store_name}.INDEX', value=json.dumps(index))
 
     def get_index(self) -> list:
