@@ -10,6 +10,7 @@ from .multiprocessing import MultiProcessingManager
 import sys
 import os
 import logging
+import base64
 import argparse
 
 
@@ -152,6 +153,9 @@ class ProcessManager():
 
         except KeyboardInterrupt as kbi:
             logging.warning('(KeyboardInterrupt) Exiting application.')
+        except Exception as ex:
+            logging.exception(str(ex))
+        finally:
             if self.exit_procedure:
                 self.exit_procedure()
             if not self.console_app:
@@ -173,8 +177,31 @@ class ProcessManager():
             args: Parsed command-line arguments.
         """
         try:
-            settings.SecretsManager().set_secret(args.name, args.value)
-            logging.info(f'Added secret "{args.name}" to Secret Store.')
+            name = args.name
+            value = None
+            if args.value:
+                value = args.value
+            if args.file:
+                file_path = args.file
+                if not os.path.exists(file_path):
+                    raise FileNotFoundError(f'The file "{file_path}" could not be found.')
+
+                if args.store_as == 'raw':
+                    with open(file_path, 'r') as file:
+                        file_content = file.read()
+                    value = file_content
+                elif args.store_as == 'base64':
+                    with open(file_path, 'rb') as file:
+                        file_content = file.read()
+                    value = base64.b64encode(file_content).decode('utf-8')
+                else:
+                    raise ValueError(f'Invalid store_as value: {args.store_as}')
+
+            if value is None:
+                raise ValueError(f'No "value" was specified for {name}')
+
+            settings.SecretsManager().set_secret(name, value)
+            logging.info(f'Added secret "{name}" to Secret Store.')
             settings.Settings().close()
         except Exception as ex:
             logging.error(f'Error occurred while adding secret {args.name}.  Error: {str(ex)}')
