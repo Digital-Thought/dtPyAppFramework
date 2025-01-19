@@ -117,7 +117,13 @@ class AbstractApp(object):
 
         elif opts.add_secret:
             arg_parser.add_argument('--name', action='store', type=str, required=True, help="Secret Name")
-            arg_parser.add_argument('--value', action='store', type=str, required=True, help="Secret Value")
+
+            group = arg_parser.add_mutually_exclusive_group(required=True)
+            group.add_argument('--value', action='store', type=str, help="Secret Value")
+            group.add_argument('--file', action='store', type=str, help="File to add to secret")
+
+            arg_parser.add_argument('--store_as', action='store', type=str, default='raw', choices=['raw', 'base64'],
+                                    help="Store file as either base64 or raw")
 
     def exit(self):
         self.exiting()
