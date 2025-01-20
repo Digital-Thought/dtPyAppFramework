@@ -44,6 +44,7 @@ class WindowsService(win32serviceutil.ServiceFramework):
             logging.exception(str(ex))
             raise ex
         logging.info(f"Service {self._svc_name_} is stopping...")
+        servicemanager.LogInfoMsg(f"Service {self._svc_name_} is stopping...")
 
 def call_service(svc_name, svc_display_name, svc_description, main_function, exit_function):
     WindowsService._svc_name_ = svc_name
