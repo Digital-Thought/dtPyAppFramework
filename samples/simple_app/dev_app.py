@@ -6,6 +6,7 @@ sys.path.append(os.path.abspath('../../src'))
 
 from dtPyAppFramework.application import AbstractApp
 from dtPyAppFramework.settings import Settings
+from dtPyAppFramework.process import ProcessManager
 
 import logging
 
@@ -26,6 +27,8 @@ class SimpleApp(AbstractApp):
         logging.info(f'All Key/Value Pairs in the Secret for cloud store "test_setting.app_core" : {Settings().get("test_setting.app_core")}')
         Settings().secret_manager.set_secret('bob', 'hello world')
         # logging.info(f'Just the value for "key1" in the Secret for cloud store "test1" : {settings.Settings()['test1.key1']}')
+        #ProcessManager().handle_shutdown()
+
 
     def exiting(self):
         logging.info('Put your custom exiting process here!')
