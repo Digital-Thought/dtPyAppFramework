@@ -1,9 +1,11 @@
 import platform
 import logging
+import sys
 
 if platform.system() == "Windows":
     try:
         import win32service
+        import socket
         import win32serviceutil
         import win32event
         import servicemanager
@@ -13,24 +15,42 @@ if platform.system() == "Windows":
 
 
 class WindowsService(win32serviceutil.ServiceFramework):
+    _svc_name_ = None
+    _svc_display_name_ = None
+    _svc_description_ = None
+    _running_function_ = None
+    _stop_function_ = None
 
     def __init__(self, args):
         win32serviceutil.ServiceFramework.__init__(self, args)
-        from dtPyAppFramework.process import ProcessManager
+        self.hWaitStop = win32event.CreateEvent(None, 0, 0, None)
+        socket.setdefaulttimeout(60)
         self.args = args
-        process_manager = ProcessManager()
-        self.running_function = process_manager.__main__
-        self.stop_function = process_manager.handle_shutdown
-        self._svc_name_ = process_manager.short_name
-        self._svc_display_name_ = process_manager.full_name
-        self._svc_description_ = process_manager.description
 
     def SvcStop(self):
         self.ReportServiceStatus(win32service.SERVICE_STOP_PENDING)
-        self.stop_function(self.args)
+        win32event.SetEvent(self.hWaitStop)
+        self._stop_function_()
 
     def SvcDoRun(self):
-        logging.info(f"Service {self.name} is starting...")
-        servicemanager.LogInfoMsg(f"Service {self.name} is starting...")
-        self.running_function(self.args)
-        logging.info("Service is stopping...")
+        rc = None
+        logging.info(f"Service {self._svc_name_} is starting...")
+        servicemanager.LogInfoMsg(f"Service {self._svc_name_} is starting...")
+        self._running_function_(self.args)
+        while rc != win32event.WAIT_OBJECT_0:
+            rc = win32event.WaitForSingleObject(self.hWaitStop, 5000)
+        logging.info(f"Service {self._svc_name_} is stopping...")
+
+def call_service(svc_name, svc_display_name, svc_description, main_function, exit_function):
+    WindowsService._svc_name_ = svc_name
+    WindowsService._svc_display_name_ = svc_display_name
+    WindowsService._svc_description_ = svc_description
+    WindowsService._running_function_ = main_function
+    WindowsService._stop_function_ = exit_function
+
+    if len(sys.argv) == 1:
+        servicemanager.Initialize()
+        servicemanager.PrepareToHostSingle(WindowsService)
+        servicemanager.StartServiceCtrlDispatcher()
+    else:
+        win32serviceutil.HandleCommandLine(WindowsService)

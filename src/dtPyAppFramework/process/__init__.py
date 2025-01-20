@@ -17,8 +17,7 @@ import time
 
 if platform.system() == "Windows":
     try:
-        from dtPyAppFramework.process.windows_service import WindowsService
-        import win32serviceutil
+        from dtPyAppFramework.process.windows_service import call_service
     except ImportError as ex:
         logging.error("pywin32 is not installed.")
         raise ex
@@ -162,14 +161,10 @@ class ProcessManager():
                 elif args.service:
                     if platform.system() == "Windows":
                         sys.argv.remove('--service')
-                        if '--install' in sys.argv:
-                            sys.argv.remove('--install')
-                            sys.argv.append('install')
-                        WindowsService._svc_name_ = self.short_name
-                        WindowsService._svc_display_name_ = self.full_name
-                        WindowsService._svc_description_ = self.description
-                        win32serviceutil.HandleCommandLine(WindowsService)
-                        self.handle_shutdown()
+                        call_service(svc_name=self.short_name, svc_display_name=self.full_name,
+                                     svc_description=self.description, main_function=self.__main__,
+                                     exit_function=self.call_shutdown)
+
                 else:
                     self.__main__(args)
 
