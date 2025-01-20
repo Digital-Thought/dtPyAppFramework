@@ -160,7 +160,7 @@ class ProcessManager():
                     self.__add_secret__(args)
                 elif args.service:
                     if platform.system() == "Windows":
-                        sys.argv.remove('--service')
+                        sys.argv = [sys.argv[0]]
                         call_service(svc_name=self.short_name, svc_display_name=self.full_name,
                                      svc_description=self.description, main_function=self.__main__,
                                      exit_function=self.call_shutdown)

@@ -105,9 +105,14 @@ class AbstractApp(object):
         arg_parser.add_argument('--run', action='store_true', required=False, help='Run Processor')
         arg_parser.add_argument('--service', action='store_true', required=False, help='Run as Service')
         arg_parser.add_argument('--single_folder', action='store_true', required=False, help='Keeps all Directories in a single folder')
+        arg_parser.add_argument('--working_dir', action='store', type=str, required=False, help="Sets the Working Directory")
+
         self.define_args(arg_parser)
         # Check specific states and add corresponding arguments
         opts, rem_args = arg_parser.parse_known_args()
+
+        if opts.working_dir:
+            os.chdir(opts.working_dir)
 
         if opts.single_folder:
             os.environ['DEV_MODE'] = "True"
