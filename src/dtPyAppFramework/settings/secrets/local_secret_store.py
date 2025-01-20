@@ -4,6 +4,8 @@ import sys
 import logging
 import re
 import pybase64
+import yaml
+import base64
 
 from .secret_store import AbstractSecretStore, SecretsStoreException
 from itertools import cycle
@@ -64,8 +66,44 @@ class LocalSecretStore(AbstractSecretStore):
             self.store_available = True
             self.store_read_only = not self.__is_writeable()
             logging.info(f'Successfully opened Secrets Store: {self.store_path}')
+            self.__check_auto_imports(root_store_path)
         except Exception as ex:
             raise SecretsStoreException(f'Failed to open Secrets Store: {self.store_path}. Error: {str(ex)}')
+
+    def __check_auto_imports(self, root_store_path):
+        auto_yaml = os.path.join(root_store_path, 'secrets.yaml')
+        if os.path.exists(auto_yaml):
+            print(f'Performing Auto-Import of Secrets from {auto_yaml}')
+            with open(auto_yaml, 'r', encoding='UTF-8') as auto_yaml_file:
+                secrets = yaml.safe_load(auto_yaml_file)
+                for entry in secrets['secrets']:
+                    name = entry.get('name')
+                    value = entry.get('value')
+                    secret_file = entry.get('file')
+                    store_as = entry.get('store_as')
+
+                    if secret_file is not None:
+                        if os.path.exists(secret_file):
+                            if store_as == 'raw':
+                                with open(secret_file, 'r') as file:
+                                    file_content = file.read()
+                                value = file_content
+                            elif store_as == 'base64':
+                                with open(secret_file, 'rb') as file:
+                                    file_content = file.read()
+                                value = base64.b64encode(file_content).decode('utf-8')
+                            else:
+                                print(f'Unsupported "store_as" value of {store_as} for {name}', file=sys.stderr)
+                        else:
+                            print(f'The file "{secret_file}" specified for {name} does not exist', file=sys.stderr)
+
+                    if value is not None:
+                        self.set_secret(name, value)
+                        print(f'Imported Secret: {name}')
+                    else:
+                        print(f'Missing "value" for {name}. Not imported.', file=sys.stderr)
+
+            os.remove(auto_yaml)
 
     def __guid(self):
         """

@@ -26,6 +26,10 @@ class SimpleApp(AbstractApp):
         logging.debug(f'All Key/Value Pairs in the Secret for cloud store "test_setting.bob" : {Settings().get("test_setting.bob")}')
         logging.info(f'All Key/Value Pairs in the Secret for cloud store "test_setting.app_core" : {Settings().get("test_setting.app_core")}')
         Settings().secret_manager.set_secret('bob', 'hello world')
+
+        logging.info(f'testing_1 : {Settings().get("testing_1")}')
+        logging.info(f'file_test : {Settings().get("file_test")}')
+        logging.info(f'file_test2 : {Settings().get("file_test2")}')
         # logging.info(f'Just the value for "key1" in the Secret for cloud store "test1" : {settings.Settings()['test1.key1']}')
         #ProcessManager().handle_shutdown()
 
