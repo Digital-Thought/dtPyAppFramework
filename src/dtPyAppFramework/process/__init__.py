@@ -166,6 +166,8 @@ class ProcessManager():
                                      exit_function=self.call_shutdown)
 
                 else:
+                    signal.signal(signal.SIGINT, self.call_shutdown)
+                    signal.signal(signal.SIGTERM, self.call_shutdown)
                     self.__main__(args)
 
         except KeyboardInterrupt as kbi:
@@ -236,8 +238,6 @@ class ProcessManager():
             args: Parsed command-line arguments.
         """
         self.running.set()
-        signal.signal(signal.SIGINT, self.call_shutdown)
-        signal.signal(signal.SIGTERM, self.call_shutdown)
         self.load_config()
         self.main_procedure(args)
 
