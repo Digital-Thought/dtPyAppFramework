@@ -6,12 +6,21 @@ from .. import resources
 from multiprocessing import current_process
 from argparse import ArgumentParser
 from .multiprocessing import MultiProcessingManager
-
+import platform
 import sys
 import os
 import logging
 import base64
-import argparse
+import threading
+import signal
+import time
+
+if platform.system() == "Windows":
+    try:
+        from dtPyAppFramework.process.windows_service import call_service
+    except ImportError as ex:
+        logging.error("pywin32 is not installed.")
+        raise ex
 
 
 def is_multiprocess_spawned_instance():
@@ -64,6 +73,7 @@ class ProcessManager():
         self.multiprocessing_manager = None
         self.stdout_txt_file = None
         self.stderr_txt_file = None
+        self.running = threading.Event()
 
     def __initialise_spawned_application__(self, parent_log_path, job_id, worker_id, job_name, pipe_registry):
         """
@@ -113,10 +123,10 @@ class ProcessManager():
             stdout_txt = '{}/stdout.txt'.format(self.log_path, self.application_paths.app_short_name)
             stderr_txt = '{}/stderr.txt'.format(self.log_path, self.application_paths.app_short_name)
 
-            stdout_txt_file = open(stdout_txt, mode='w', buffering=1)
-            stderr_txt_file = open(stderr_txt, mode='w', buffering=1)
-            sys.stdout = stdout_txt_file
-            sys.stderr = stderr_txt_file
+            self.stdout_txt_file = open(stdout_txt, mode='w', buffering=1)
+            self.stderr_txt_file = open(stderr_txt, mode='w', buffering=1)
+            sys.stdout = self.stdout_txt_file
+            sys.stderr = self.stderr_txt_file
 
     def initialise_application(self, arg_parser):
         """
@@ -148,19 +158,22 @@ class ProcessManager():
 
                 if args.add_secret:
                     self.__add_secret__(args)
+                elif args.service:
+                    if platform.system() == "Windows":
+                        sys.argv = [sys.argv[0]]
+                        call_service(svc_name=self.short_name, svc_display_name=self.full_name,
+                                     svc_description=self.description, main_function=self.__main__,
+                                     exit_function=self.call_shutdown)
+
                 else:
+                    signal.signal(signal.SIGINT, self.call_shutdown)
+                    signal.signal(signal.SIGTERM, self.call_shutdown)
                     self.__main__(args)
 
         except KeyboardInterrupt as kbi:
             logging.warning('(KeyboardInterrupt) Exiting application.')
         except Exception as ex:
             logging.exception(str(ex))
-        finally:
-            if self.exit_procedure:
-                self.exit_procedure()
-            if not self.console_app:
-                self.stdout_txt_file.close()
-                self.stderr_txt_file.close()
 
     def load_config(self):
         """
@@ -207,6 +220,16 @@ class ProcessManager():
             logging.error(f'Error occurred while adding secret {args.name}.  Error: {str(ex)}')
             raise ex
 
+    def handle_shutdown(self):
+        if self.exit_procedure:
+            self.exit_procedure()
+        if not self.console_app:
+            self.stdout_txt_file.close()
+            self.stderr_txt_file.close()
+
+    def call_shutdown(self, signum=None, frame=None):
+        self.running.clear()
+
     def __main__(self, args):
         """
         Execute the main procedure of the application.
@@ -214,8 +237,13 @@ class ProcessManager():
         Args:
             args: Parsed command-line arguments.
         """
+        self.running.set()
         self.load_config()
         self.main_procedure(args)
 
-        if self.exit_procedure:
-            self.exit_procedure()
+        while self.running.is_set():
+            time.sleep(0.5)
+
+        self.handle_shutdown()
+
+
