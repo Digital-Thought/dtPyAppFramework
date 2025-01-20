@@ -123,10 +123,10 @@ class ProcessManager():
             stdout_txt = '{}/stdout.txt'.format(self.log_path, self.application_paths.app_short_name)
             stderr_txt = '{}/stderr.txt'.format(self.log_path, self.application_paths.app_short_name)
 
-            stdout_txt_file = open(stdout_txt, mode='w', buffering=1)
-            stderr_txt_file = open(stderr_txt, mode='w', buffering=1)
-            sys.stdout = stdout_txt_file
-            sys.stderr = stderr_txt_file
+            self.stdout_txt_file = open(stdout_txt, mode='w', buffering=1)
+            self.stderr_txt_file = open(stderr_txt, mode='w', buffering=1)
+            sys.stdout = self.stdout_txt_file
+            sys.stderr = self.stderr_txt_file
 
     def initialise_application(self, arg_parser):
         """
