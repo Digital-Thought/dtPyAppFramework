@@ -35,8 +35,9 @@ class WindowsService(win32serviceutil.ServiceFramework):
     def SvcDoRun(self):
         try:
             rc = None
-            logging.info(f"Service {self._svc_name_} is starting...")
             servicemanager.LogInfoMsg(f"Service {self._svc_name_} is starting...")
+            logging.info(f"Service {self._svc_name_} is starting...")
+            logging.info(f"Service {self._svc_name_} is calling _running_function_...")
             self._running_function_(self.args)
             while rc != win32event.WAIT_OBJECT_0:
                 rc = win32event.WaitForSingleObject(self.hWaitStop, 5000)
