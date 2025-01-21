@@ -74,8 +74,9 @@ class ProcessManager():
         self.stdout_txt_file = None
         self.stderr_txt_file = None
         self.running = threading.Event()
+        self.spawned_running_event = None
 
-    def __initialise_spawned_application__(self, parent_log_path, job_id, worker_id, job_name, pipe_registry):
+    def __initialise_spawned_application__(self, parent_log_path, job_id, worker_id, job_name, pipe_registry, running_event):
         """
         Initialize a spawned instance of the application in a multiprocessing environment.
 
@@ -87,6 +88,7 @@ class ProcessManager():
         """
         try:
             if is_multiprocess_spawned_instance():
+                self.spawned_running_event = running_event
                 self.application_paths = paths.ApplicationPaths(app_short_name=self.short_name,
                                                                 spawned_instance=True, worker_id=worker_id)
                 self.application_settings = settings.Settings(application_paths=self.application_paths,
