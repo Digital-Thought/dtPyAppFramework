@@ -30,7 +30,7 @@ def is_multiprocess_spawned_instance():
     Returns:
         bool: True if the process is a spawned instance, False otherwise.
     """
-    return current_process().name != "MainProcess"
+    return current_process().name != "MainProcess" or '--multiprocessing-fork' in sys.argv
 
 
 @singleton()
