@@ -35,9 +35,7 @@ class WindowsService(win32serviceutil.ServiceFramework):
     def SvcDoRun(self):
         try:
             rc = None
-            servicemanager.LogInfoMsg(f"Service {self._svc_name_} is starting...")
             logging.info(f"Service {self._svc_name_} is starting...")
-            logging.info(f"Service {self._svc_name_} is calling _running_function_...")
             self._running_function_(self.args)
             while rc != win32event.WAIT_OBJECT_0:
                 rc = win32event.WaitForSingleObject(self.hWaitStop, 5000)
@@ -46,7 +44,6 @@ class WindowsService(win32serviceutil.ServiceFramework):
             print(str(ex))
             raise ex
         logging.info(f"Service {self._svc_name_} is stopping...")
-        servicemanager.LogInfoMsg(f"Service {self._svc_name_} is stopping...")
 
 def call_service(svc_name, svc_display_name, svc_description, main_function, exit_function):
     WindowsService._svc_name_ = svc_name
