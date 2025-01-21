@@ -42,6 +42,7 @@ class WindowsService(win32serviceutil.ServiceFramework):
                 rc = win32event.WaitForSingleObject(self.hWaitStop, 5000)
         except Exception as ex:
             logging.exception(str(ex))
+            print(str(ex))
             raise ex
         logging.info(f"Service {self._svc_name_} is stopping...")
         servicemanager.LogInfoMsg(f"Service {self._svc_name_} is stopping...")

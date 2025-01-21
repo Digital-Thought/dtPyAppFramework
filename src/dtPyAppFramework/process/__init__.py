@@ -237,10 +237,14 @@ class ProcessManager():
         Args:
             args: Parsed command-line arguments.
         """
+        logging.info('Starting application... __main__')
         self.running.set()
+        logging.info('Starting application... load_config')
         self.load_config()
+        logging.info('Starting application... main_procedure')
         self.main_procedure(args)
 
+        logging.info('Starting application... waiting for not is_set')
         while self.running.is_set():
             time.sleep(0.5)
 
