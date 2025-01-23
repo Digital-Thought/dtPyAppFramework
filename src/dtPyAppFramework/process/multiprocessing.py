@@ -1,8 +1,9 @@
 from ..decorators import singleton
-from multiprocessing import Process, Manager
-from ..paths import ApplicationPaths
+from multiprocessing import Process, Manager, Pipe
+from enum import Enum
 from dtPyAppFramework.settings import Settings
 
+import threading
 import sys
 import os
 import logging
@@ -97,15 +98,18 @@ class MultiProcessingJob():
         self.args = tuple(args)
         self.kwargs = dict(kwargs)
         self.workers = []
+        self.instance_control_pipes = []
 
     def start(self):
         """
         Start the worker processes for the job.
         """
         for x in range(self.worker_count):
+            ctrl_pipe_parent, ctrl_pipe_connection = Pipe()
+            self.instance_control_pipes.append(ctrl_pipe_parent)
             pipe_registry = Settings().secret_manager.local_secrets_store_manager.server_thread.pipe_registry
             worker = DtProcess(self.log_path, self.job_id, self.job_name, self.target, self.job_name, pipe_registry,
-                               self.args, self.kwargs)
+                               ctrl_pipe_connection, self.args, self.kwargs)
             worker.start()
             logging.info(f'Started Worker {worker.worker_id} for Job ID {self.job_id} ({self.job_name}).')
             self.workers.append(worker)
@@ -118,7 +122,13 @@ class MultiProcessingJob():
             worker.join()
         logging.info(f'All Workers for Job ID {self.job_id} ({self.job_name}) ended.')
 
+    def close(self):
+        logging.info('Sending Close CMD to Processes...')
+        for conn in self.instance_control_pipes:
+            conn.send(ProcessStateCommands.CMD_CLOSE)
 
+class ProcessStateCommands(Enum):
+    CMD_CLOSE = 1
 
 
 class DtProcess(Process):
@@ -134,14 +144,42 @@ class DtProcess(Process):
     """
 
     def __init__(self, parent_log_path, job_id, job_name, target=None, name=None, pipe_registry=None,
-                 args=(), kwargs={}):
+                 ctrl_pipe_connection=None, args=(), kwargs={}):
         self.worker_id = get_new_uuid()
         self.job_id = job_id
         self.job_name = job_name
         self.parent_log_path = parent_log_path
         self.multi_processing_job = None
         self.pipe_registry = pipe_registry
+        self.running = None
+        self.ctrl_pipe_connection = ctrl_pipe_connection
+
         super(DtProcess, self).__init__(target=target, name=name, args=args, kwargs=kwargs)
+        self.state_check_thread = None
+
+    def state_check(self):
+        logging.info('Starting Worker State Monitor Thread')
+        while True:
+            if self.ctrl_pipe_connection.poll():  # Check if there is a message from this pipe
+                try:
+                    command = self.ctrl_pipe_connection.recv()
+                    match command:
+                        case ProcessStateCommands.CMD_CLOSE:
+                            self.close()
+                            break
+
+                        case _:
+                            logging.error(
+                                f'Unrecognised Request: command = {command}')
+
+                except EOFError as ex:
+                    logging.exception(ex)
+
+        logging.info(f'Worker State Monitor Thread Ended')
+
+    def close(self):
+        self.running.clear()
+        logging.info('Closed Process')
 
     def set_parent(self, job):
         """
@@ -157,10 +195,13 @@ class DtProcess(Process):
         Run method for the worker process.
         """
         from . import ProcessManager
+        self.running = threading.Event()
+        self.running.set()
         ProcessManager().__initialise_spawned_application__(self.parent_log_path, self.job_id, self.worker_id,
-                                                            self.job_name, self.pipe_registry)
+                                                            self.job_name, self.pipe_registry, self.running)
         print(f'Process ID = {os.getpid()}')
         print(f'worker_id {os.getpid()} = {self.worker_id}')
         print(f'job_id {os.getpid()} = {self.job_id}')
+        self.state_check_thread = threading.Thread(target=self.state_check, daemon=True).start()
         super().run()
         Settings().secret_manager.close()

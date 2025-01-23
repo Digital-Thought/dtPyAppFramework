@@ -6,8 +6,9 @@ sys.path.append(os.path.abspath('../../src'))
 
 from dtPyAppFramework.application import AbstractApp
 from dtPyAppFramework.settings import Settings
+from dtPyAppFramework.process import ProcessManager
 from dtPyAppFramework.process.multiprocessing import MultiProcessingManager, MultiProcessingJob
-
+import time
 import logging
 
 def start_worker_instance(key):
@@ -17,6 +18,8 @@ def start_worker_instance(key):
     logging.info(f'Finished Value: {val}')
     val += 1
     Settings().secret_manager.set_secret('bob', val)
+    while ProcessManager().spawned_running_event.is_set():
+        time.sleep(0.5)
 
 class MultiprocessingApp(AbstractApp):
 
@@ -33,8 +36,11 @@ class MultiprocessingApp(AbstractApp):
         job.start()
         val += 1
         Settings().secret_manager.set_secret('bob', val)
-        job.wait()
+        time.sleep(10)
+        job.close()
         logging.info(f'Finished: {Settings().secret_manager.get_secret('bob')}')
+        time.sleep(5)
+        ProcessManager().call_shutdown()
 
 
     def exiting(self):

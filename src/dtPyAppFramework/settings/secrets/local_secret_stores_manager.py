@@ -223,7 +223,12 @@ class LocalSecretStoresManager:
         if self.pipe_registry is None and self.server_thread is not None:
             self.child_connection.send((LocalSecretsManagerCommands.CMD_SHUTDOWN, None, None, None))
         elif self.pipe_registry is not None:
-            self.child_connection.send((LocalSecretsManagerCommands.CMD_EXIT, None, None, None))
+            try:
+                self.child_connection.send((LocalSecretsManagerCommands.CMD_EXIT, None, None, None))
+            except BrokenPipeError as broken_pipe_error:
+                pass
+            except Exception as e:
+                logging.exception(str(e))
         else:
             logging.error('Unexpected State for LocalSecretStoresManager')
             raise Exception('Unexpected State for LocalSecretStoresManager')
