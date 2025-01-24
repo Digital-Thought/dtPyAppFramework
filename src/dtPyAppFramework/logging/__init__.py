@@ -2,7 +2,7 @@
 import logging
 import logging.config
 import os
-import pathlib
+import shutil
 import multiprocessing
 from logging import Formatter
 from datetime import datetime
@@ -68,7 +68,28 @@ def get_logging_config(logging_source=None):
     if config_path:
         return config_path, yaml.safe_load(config_path)
     else:
-        return "DEFAULT", default_config(log_level=Settings().get("logging.level", "INFO"))
+        return "DEFAULT", default_config(log_level=Settings().get("logging.level", "INFO"),
+                                         rotation_backup_count=Settings().get("logging.rotation_backup_count", 5))
+
+
+def purge_old_logs(log_path, rotation_backup_count):
+    timestamped_dirs = []
+    for entry in os.scandir(log_path):
+        if entry.is_dir():
+            dir_name = entry.name
+            try:
+                dir_time = datetime.strptime(dir_name, '%Y%m%d_%H%M%S')
+                timestamped_dirs.append((entry.path, dir_time))
+            except ValueError:
+                # If the directory name doesn’t match the timestamp format, skip it
+                pass
+
+    timestamped_dirs.sort(key=lambda x: x[1], reverse=True)
+    logging.info(f'Keeping on the last "{rotation_backup_count}" log folders.')
+    dirs_to_delete = timestamped_dirs[rotation_backup_count:]
+    for dir_path, _ in dirs_to_delete:
+        logging.warning(f'Deleting old log folder: {dir_path}')
+        shutil.rmtree(dir_path, ignore_errors=True)
 
 
 def initialise_logging(spawned_process=False, redirect_console=False, job_id=None, worker_id=None, parent_log_path=None):
@@ -101,6 +122,7 @@ def initialise_logging(spawned_process=False, redirect_console=False, job_id=Non
         if spawned_process:
             log_folder = f'{parent_log_path}/job-{job_id}/{worker_id}'
         else:
+            purge_old_logs(app_paths.logging_root_path, Settings().get("logging.rotation_backup_count", 5))
             log_folder = f'{app_paths.logging_root_path}/{format(datetime.now().strftime("%Y%m%d_%H%M%S"))}'
 
         os.makedirs(log_folder, exist_ok=True)
@@ -109,8 +131,7 @@ def initialise_logging(spawned_process=False, redirect_console=False, job_id=Non
                                                                                         app_paths.app_short_name)
         logging_config['handlers']['logfile_ERR']['filename'] = '{}/error-{}.log'.format(log_folder,
                                                                                          app_paths.app_short_name)
-        logging_config['handlers']['logfile_ELASTIC']['filename'] = '{}/elastic-{}.log'.format(log_folder,
-                                                                                               app_paths.app_short_name)
+
         logging.config.dictConfig(logging_config)
 
         if not redirect_console:
