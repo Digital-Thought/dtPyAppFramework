@@ -92,13 +92,12 @@ def purge_old_logs(log_path, rotation_backup_count):
         shutil.rmtree(dir_path, ignore_errors=True)
 
 
-def initialise_logging(spawned_process=False, redirect_console=False, job_id=None, worker_id=None, parent_log_path=None):
+def initialise_logging(spawned_process=False, job_id=None, worker_id=None, parent_log_path=None):
     """
     Initialize logging configuration based on the environment and application settings.
 
     Args:
         spawned_process (bool): Indicates if the process is spawned.
-        redirect_console (bool): Indicates whether to redirect console output to logs.
         job_id (int): Job ID for the spawned process.
         worker_id (int): Worker ID for the spawned process.
         parent_log_path (str): Path to the parent log folder for spawned processes.
@@ -134,7 +133,7 @@ def initialise_logging(spawned_process=False, redirect_console=False, job_id=Non
 
         logging.config.dictConfig(logging_config)
 
-        if not redirect_console:
+        if Settings().get("logging.log_to_console", False):
             # Configure console logging
             formatter = ColoredFormatter(DEFAULT_FORMATTER)
 

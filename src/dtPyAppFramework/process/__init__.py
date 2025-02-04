@@ -94,8 +94,7 @@ class ProcessManager():
                 self.application_settings = settings.Settings(application_paths=self.application_paths,
                                                               app_short_name=self.short_name)
                 self.resource_manager = resources.ResourceManager(application_paths=self.application_paths)
-                self.log_path = app_logging.initialise_logging(redirect_console=not self.console_app,
-                                                               spawned_process=True,
+                self.log_path = app_logging.initialise_logging(spawned_process=True,
                                                                job_id=job_id, worker_id=worker_id,
                                                                parent_log_path=parent_log_path)
                 self.application_settings.init_settings_readers(pipe_registry=pipe_registry)
@@ -144,7 +143,7 @@ class ProcessManager():
                 self.application_settings = settings.Settings(application_paths=self.application_paths)
                 self.application_settings.init_settings_readers()
                 self.resource_manager = resources.ResourceManager(application_paths=self.application_paths)
-                self.log_path = app_logging.initialise_logging(redirect_console=not self.console_app)
+                self.log_path = app_logging.initialise_logging()
                 #self.application_settings.init_settings_readers()
                 self.application_settings.secret_manager.load_cloud_stores()
                 self.__initialise_stdout_capt__()
