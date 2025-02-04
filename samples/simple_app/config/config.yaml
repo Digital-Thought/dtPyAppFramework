@@ -3,6 +3,7 @@ test_setting:
 
 logging:
   level: DEBUG
+  log_to_console: True
 #secrets_manager:
 #  cloud_stores:
 #    test1:
