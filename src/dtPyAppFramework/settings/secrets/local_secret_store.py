@@ -119,7 +119,7 @@ class LocalSecretStore(AbstractSecretStore):
                 "ioreg -d2 -c IOPlatformExpertDevice | awk -F\\\" '/IOPlatformUUID/{print $(NF-1)}'")
 
         if sys.platform == 'win32' or sys.platform == 'cygwin' or sys.platform == 'msys':
-            base = run_cmd('wmic csproduct get uuid').split('\n')[2] \
+            base = run_cmd('powershell "Get-WmiObject -Class "Win32_ComputerSystemProduct" | Select-Object -Property UUID"').split('\n')[2] \
                 .strip()
 
         if sys.platform.startswith('linux'):
