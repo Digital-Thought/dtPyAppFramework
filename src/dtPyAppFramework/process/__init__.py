@@ -3,6 +3,10 @@ from .. import logging as app_logging
 from .. import paths
 from .. import settings
 from .. import resources
+
+from InquirerPy import prompt
+from InquirerPy import inquirer
+
 from multiprocessing import current_process
 from argparse import ArgumentParser
 from .multiprocessing import MultiProcessingManager
@@ -183,6 +187,26 @@ class ProcessManager():
         if not is_multiprocess_spawned_instance():
             self.application_paths.log_paths()
 
+    def _add_secret_file(self, secret_name, file_path, store_as):
+        print(f'Adding secret "{secret_name}" from file "{file_path}" as {store_as} ...')
+        if not os.path.exists(file_path):
+            print(f'The file "{file_path}" could not be found.')
+            raise FileNotFoundError(f'The file "{file_path}" could not be found.')
+
+        if store_as.lower() == 'raw':
+            with open(file_path, 'r') as file:
+                file_content = file.read()
+            value = file_content
+        elif store_as.lower() == 'base64':
+            with open(file_path, 'rb') as file:
+                file_content = file.read()
+            value = base64.b64encode(file_content).decode('utf-8')
+        else:
+            raise ValueError(f'Invalid store_as value: {store_as}')
+
+        settings.SecretsManager().set_secret(secret_name, value)
+        logging.info(f'Added secret "{secret_name}" to Secret Store.')
+
     def __add_secret__(self, args):
         """
         Add a secret to the application's secrets manager.
@@ -191,35 +215,106 @@ class ProcessManager():
             args: Parsed command-line arguments.
         """
         try:
-            name = args.name
-            value = None
-            if args.value:
-                value = args.value
-            if args.file:
-                file_path = args.file
-                if not os.path.exists(file_path):
-                    raise FileNotFoundError(f'The file "{file_path}" could not be found.')
+            name_passed = args.name is not None
+            value_passed = args.value is not None
+            file_passed = args.file is not None
 
-                if args.store_as == 'raw':
-                    with open(file_path, 'r') as file:
-                        file_content = file.read()
-                    value = file_content
-                elif args.store_as == 'base64':
-                    with open(file_path, 'rb') as file:
-                        file_content = file.read()
-                    value = base64.b64encode(file_content).decode('utf-8')
+            if not name_passed and not value_passed and not file_passed:
+                while True:
+                    questions = [
+                        {
+                            "type": "input",
+                            "message": "Enter the secret name:",
+                            "instruction": "my-secret-name",
+                            "name": "secret_name",
+                            "mandatory": True
+                        },
+                        {
+                            "type": "rawlist",
+                            "message": "What form of secret do you wish to add?",
+                            "default": 2,
+                            "choices": ["File", "Value"],
+                            "name": "secret_type",
+                            "mandatory": True
+                        },
+                        {
+                            "type": "list",
+                            "message": "Add file as:",
+                            "choices": ["Raw", "Base64"],
+                            "name": "file_format",
+                            "when": lambda result: 'File' in result["secret_type"],
+                            "mandatory": True
+                        }
+                    ]
+
+                    result = prompt(questions=questions)
+                    if result["secret_type"] == "Value":
+                        result["value"] = inquirer.secret(
+                            message="Enter Secret Value:",
+                            transformer=lambda _: "[hidden]", mandatory=True
+                        ).execute()
+                    else:
+                        result["file_path"] = inquirer.text(message="Path to file:", mandatory=True).execute()
+
+                    if result["secret_type"] == "File":
+                        self._add_secret_file(secret_name=result["secret_name"],
+                                              file_path=result["file_path"], store_as=result["file_format"])
+                    else:
+                        settings.SecretsManager().set_secret(result["secret_name"], result["value"])
+                        logging.info(f'Added secret "{result["secret_name"]}" to Secret Store.')
+
+                    if not inquirer.confirm(message="Do you wish to add another secret?", default=False).execute():
+                        break
+
+            if name_passed and not value_passed and not file_passed:
+                questions = [
+                    {
+                        "type": "rawlist",
+                        "message": "What form of secret do you wish to add?",
+                        "default": 2,
+                        "choices": ["File", "Value"],
+                        "name": "secret_type",
+                        "mandatory": True
+                    },
+                    {
+                        "type": "list",
+                        "message": "Add file as:",
+                        "choices": ["Raw", "Base64"],
+                        "name": "file_format",
+                        "when": lambda result: 'File' in result["secret_type"],
+                        "mandatory": True
+                    }
+                ]
+
+                result = prompt(questions=questions)
+                if result["secret_type"] == "Value":
+                    result["value"] = inquirer.secret(
+                        message="Enter Secret Value:",
+                        transformer=lambda _: "[hidden]", mandatory=True
+                    ).execute()
                 else:
-                    raise ValueError(f'Invalid store_as value: {args.store_as}')
+                    result["file_path"] = inquirer.text(message="Path to file:", mandatory=True).execute()
 
-            if value is None:
-                raise ValueError(f'No "value" was specified for {name}')
+                if result["secret_type"] == "File":
+                    self._add_secret_file(secret_name=result["secret_name"],
+                                          file_path=result["file_path"], store_as=result["file_format"])
+                else:
+                    settings.SecretsManager().set_secret(result["secret_name"], result["value"])
+                    logging.info(f'Added secret "{result["secret_name"]}" to Secret Store.')
 
-            settings.SecretsManager().set_secret(name, value)
-            logging.info(f'Added secret "{name}" to Secret Store.')
-            settings.Settings().close()
+            if not name_passed and value_passed and not file_passed:
+                settings.SecretsManager().set_secret(args.name, args.value)
+                logging.info(f'Added secret "{args.name}" to Secret Store.')
+
+            if not name_passed and not value_passed and file_passed:
+                self._add_secret_file(self, args.name, args.file, args.store_as)
+
+
         except Exception as ex:
+            print(ex)
             logging.error(f'Error occurred while adding secret {args.name}.  Error: {str(ex)}')
             raise ex
+        settings.Settings().close()
 
     def handle_shutdown(self):
         if self.exit_procedure:

@@ -47,7 +47,8 @@ class AbstractApp(object):
             'full_name': full_name
         }
 
-        self.console_app = console_app
+
+        self.console_app = console_app or ('--console' in sys.argv or '-c' in sys.argv)
         self.process_manager = None
         super().__init__()
 
@@ -104,6 +105,7 @@ class AbstractApp(object):
         arg_parser.add_argument('--add_secret', action='store_true', required=False, help='Add secret to store')
         arg_parser.add_argument('--run', action='store_true', required=False, help='Run Processor')
         arg_parser.add_argument('--service', action='store_true', required=False, help='Run as Service')
+        arg_parser.add_argument('--console', action='store_true', required=False, help='Output to Console')
         arg_parser.add_argument('--single_folder', action='store_true', required=False, help='Keeps all Directories in a single folder')
         arg_parser.add_argument('--working_dir', action='store', type=str, required=False, help="Sets the Working Directory")
 
@@ -124,9 +126,9 @@ class AbstractApp(object):
             arg_parser.add_argument('--password', action='store', type=str, required=False,
                                     help="Secrets Store password")
         elif opts.add_secret:
-            arg_parser.add_argument('--name', action='store', type=str, required=True, help="Secret Name")
+            arg_parser.add_argument('--name', action='store', type=str, required=False, help="Secret Name")
 
-            group = arg_parser.add_mutually_exclusive_group(required=True)
+            group = arg_parser.add_mutually_exclusive_group(required=False)
             group.add_argument('--value', action='store', type=str, help="Secret Value")
             group.add_argument('--file', action='store', type=str, help="File to add to secret")
 

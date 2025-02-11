@@ -41,4 +41,4 @@ class SimpleApp(AbstractApp):
 #def new_multiprocessing_job(self, job_name, worker_count, target, args=(), kwargs={}):
 os.environ['DEV_MODE'] = "True"
 SimpleApp(description="Simple App", version="1.0", short_name="simple_app",
-             full_name="Simple Application", console_app=True).run()
+             full_name="Simple Application", console_app=False).run()
