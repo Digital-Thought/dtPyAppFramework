@@ -1,0 +1,17 @@
+2025-09-05 14:29:01,397 - INFO - MainProcess.9148 - MainThread.11900 - __init__.initialise_application.157 - Multiprocessing Application (multiprocessing_app), Version: 1.0. Process ID: 9148
+2025-09-05 14:29:01,397 - INFO - MainProcess.9148 - MainThread.11900 - __init__.__main__.336 - Starting application... __main__
+2025-09-05 14:29:01,397 - INFO - MainProcess.9148 - MainThread.11900 - __init__.__main__.338 - Starting application... load_config
+2025-09-05 14:29:01,397 - INFO - MainProcess.9148 - MainThread.11900 - __init__.log_paths.54 - Logging Root Path: C:\PycharmProjects\dtPyAppFramework\samples\multiprocessing/logs
+2025-09-05 14:29:01,398 - INFO - MainProcess.9148 - MainThread.11900 - __init__.log_paths.55 - Application Data Root Path: C:\PycharmProjects\dtPyAppFramework\samples\multiprocessing/data/app
+2025-09-05 14:29:01,398 - INFO - MainProcess.9148 - MainThread.11900 - __init__.log_paths.56 - User Data Root Path: C:\PycharmProjects\dtPyAppFramework\samples\multiprocessing/data/usr
+2025-09-05 14:29:01,398 - INFO - MainProcess.9148 - MainThread.11900 - __init__.log_paths.57 - Temp Root Path: C:\PycharmProjects\dtPyAppFramework\samples\multiprocessing/temp
+2025-09-05 14:29:01,399 - INFO - MainProcess.9148 - MainThread.11900 - __init__.__main__.340 - Starting application... main_procedure
+2025-09-05 14:29:01,568 - INFO - MainProcess.9148 - MainThread.11900 - multiprocessing.start.114 - Started Worker 3406790c-b9b6-4e1e-9c55-bfe84d8879ca for Job ID cb718206-fb82-4253-ab9f-3fe373a547f6 (default_multiprocessing_job).
+2025-09-05 14:29:01,573 - INFO - MainProcess.9148 - MainThread.11900 - multiprocessing.start.114 - Started Worker 649a0a14-21a1-4f5f-97e7-6596efc0b920 for Job ID cb718206-fb82-4253-ab9f-3fe373a547f6 (default_multiprocessing_job).
+2025-09-05 14:29:11,777 - INFO - MainProcess.9148 - MainThread.11900 - multiprocessing.close.126 - Sending Close CMD to Processes...
+2025-09-05 14:29:11,803 - INFO - MainProcess.9148 - MainThread.11900 - multiprocessing_app.main.41 - Finished: 4
+2025-09-05 14:29:11,804 - WARNING - MainProcess.9148 - LocalSecretStoresManager_ServerThread.7464 - local_secret_stores_manager.run.89 - Closed Connection following EXIT request.
+2025-09-05 14:29:12,121 - WARNING - MainProcess.9148 - LocalSecretStoresManager_ServerThread.7464 - local_secret_stores_manager.run.89 - Closed Connection following EXIT request.
+2025-09-05 14:29:16,804 - INFO - MainProcess.9148 - MainThread.11900 - __init__.__main__.343 - Starting application... waiting for not is_set
+2025-09-05 14:29:16,804 - INFO - MainProcess.9148 - MainThread.11900 - multiprocessing_app.exiting.47 - Put your custom exiting process here!
+2025-09-05 14:29:16,805 - WARNING - MainProcess.9148 - LocalSecretStoresManager_ServerThread.7464 - local_secret_stores_manager.run.110 - Closed All Connections following SHUTDOWN request.

@@ -1,0 +1,34 @@
+2025-09-05 14:51:24,681 - INFO - MainProcess.12284 - MainThread.13748 - __init__.initialise_application.157 - dtPyAppFramework Container Mode Sample (container-sample), Version: 1.0.0. Process ID: 12284
+2025-09-05 14:51:24,682 - INFO - MainProcess.12284 - MainThread.13748 - __init__.__main__.336 - Starting application... __main__
+2025-09-05 14:51:24,682 - INFO - MainProcess.12284 - MainThread.13748 - __init__.__main__.338 - Starting application... load_config
+2025-09-05 14:51:24,682 - INFO - MainProcess.12284 - MainThread.13748 - __init__.log_paths.54 - Logging Root Path: C:\PycharmProjects\dtPyAppFramework\samples\container_mode/logs
+2025-09-05 14:51:24,683 - INFO - MainProcess.12284 - MainThread.13748 - __init__.log_paths.55 - Application Data Root Path: C:\PycharmProjects\dtPyAppFramework\samples\container_mode/data
+2025-09-05 14:51:24,683 - INFO - MainProcess.12284 - MainThread.13748 - __init__.log_paths.56 - User Data Root Path: C:\PycharmProjects\dtPyAppFramework\samples\container_mode/data
+2025-09-05 14:51:24,683 - INFO - MainProcess.12284 - MainThread.13748 - __init__.log_paths.57 - Temp Root Path: C:\PycharmProjects\dtPyAppFramework\samples\container_mode/temp
+2025-09-05 14:51:24,683 - INFO - MainProcess.12284 - MainThread.13748 - __init__.__main__.340 - Starting application... main_procedure
+2025-09-05 14:51:24,684 - INFO - MainProcess.12284 - MainThread.13748 - container_app.main.56 - === Container Mode Sample Application ===
+2025-09-05 14:51:24,684 - INFO - MainProcess.12284 - MainThread.13748 - container_app.main.60 - Container Mode: True
+2025-09-05 14:51:24,684 - INFO - MainProcess.12284 - MainThread.13748 - container_app._demonstrate_configuration.115 - === Configuration Management ===
+2025-09-05 14:51:24,684 - INFO - MainProcess.12284 - MainThread.13748 - container_app._demonstrate_configuration.120 - Number of configuration layers: 1
+2025-09-05 14:51:24,684 - INFO - MainProcess.12284 - MainThread.13748 - container_app._demonstrate_configuration.124 -   Config Reader 1: C:\PycharmProjects\dtPyAppFramework\samples\container_mode\config\config.yaml
+2025-09-05 14:51:24,811 - INFO - MainProcess.12284 - MainThread.13748 - container_app._demonstrate_configuration.131 - App Name: Container Mode Sample
+2025-09-05 14:51:24,811 - INFO - MainProcess.12284 - MainThread.13748 - container_app._demonstrate_configuration.132 - Debug Mode: True
+2025-09-05 14:51:24,811 - INFO - MainProcess.12284 - MainThread.13748 - container_app._demonstrate_configuration.133 - Database Host: ENV/DB_HOST
+2025-09-05 14:51:25,116 - INFO - MainProcess.12284 - MainThread.13748 - container_app._demonstrate_configuration.139 - Runtime configuration values set successfully
+2025-09-05 14:51:25,116 - INFO - MainProcess.12284 - MainThread.13748 - container_app._demonstrate_secrets.143 - === Secrets Management ===
+2025-09-05 14:51:25,163 - INFO - MainProcess.12284 - MainThread.13748 - container_app._demonstrate_secrets.151 - Available secret stores: {'User_Local_Store': {'available': True, 'index': ['sample_key'], 'read_only': False}, 'App_Local_Store': {'available': True, 'index': [], 'read_only': False}}
+2025-09-05 14:51:25,367 - INFO - MainProcess.12284 - MainThread.13748 - container_app._demonstrate_secrets.155 - Sample secret stored successfully
+2025-09-05 14:51:25,393 - INFO - MainProcess.12284 - MainThread.13748 - container_app._demonstrate_secrets.159 - Retrieved secret: *******************
+2025-09-05 14:51:25,433 - INFO - MainProcess.12284 - MainThread.13748 - container_app._demonstrate_secrets.163 - API Key (from secrets): ***************
+2025-09-05 14:51:25,433 - INFO - MainProcess.12284 - MainThread.13748 - container_app._demonstrate_resources.175 - === Resource Management ===
+2025-09-05 14:51:25,435 - INFO - MainProcess.12284 - MainThread.13748 - __init__.save_resource.117 - Resource saved to: "C:\PycharmProjects\dtPyAppFramework\samples\container_mode/data\resources\sample_resource.json"
+2025-09-05 14:51:25,435 - INFO - MainProcess.12284 - MainThread.13748 - container_app._demonstrate_resources.192 - Sample resource 'sample_resource.json' saved successfully
+2025-09-05 14:51:25,435 - INFO - MainProcess.12284 - MainThread.13748 - __init__.get_resource_path.85 - Returning resource from: "C:\PycharmProjects\dtPyAppFramework\samples\container_mode/data\resources\sample_resource.json"
+2025-09-05 14:51:25,444 - INFO - MainProcess.12284 - MainThread.13748 - __init__.load_resource.140 - Resource loaded from: "C:\PycharmProjects\dtPyAppFramework\samples\container_mode/data\resources\sample_resource.json"
+2025-09-05 14:51:25,444 - INFO - MainProcess.12284 - MainThread.13748 - container_app._demonstrate_resources.198 - Resource loaded - version: 1.0
+2025-09-05 14:51:25,444 - INFO - MainProcess.12284 - MainThread.13748 - container_app._demonstrate_resources.199 - Resource timestamp: 1757047885.4337485
+2025-09-05 14:51:25,606 - INFO - MainProcess.12284 - MainThread.13748 - __init__.__main__.343 - Starting application... waiting for not is_set
+2025-09-05 14:51:29,610 - INFO - MainProcess.12284 - MainThread.13748 - container_app.exiting.235 - === Application Cleanup ===
+2025-09-05 14:51:29,610 - INFO - MainProcess.12284 - MainThread.13748 - container_app.exiting.236 - Performing cleanup operations...
+2025-09-05 14:51:29,610 - INFO - MainProcess.12284 - MainThread.13748 - container_app.exiting.244 - Cleanup completed. Goodbye!
+2025-09-05 14:51:29,611 - WARNING - MainProcess.12284 - LocalSecretStoresManager_ServerThread.5564 - local_secret_stores_manager.run.110 - Closed All Connections following SHUTDOWN request.

@@ -1,0 +1,10 @@
+2025-09-05 14:29:02,375 - INFO - default_multiprocessing_job.11152 - MainThread.5172 - settings_reader.load_yaml_file.107 - Loaded settings file C:\PycharmProjects\dtPyAppFramework\samples\multiprocessing\config\config.yaml.
+2025-09-05 14:29:02,376 - WARNING - default_multiprocessing_job.11152 - MainThread.5172 - settings_reader.load_yaml_file.112 - Settings file "C:\PycharmProjects\dtPyAppFramework\samples\multiprocessing/data/app\config.yaml" does not exist.
+2025-09-05 14:29:02,377 - WARNING - default_multiprocessing_job.11152 - MainThread.5172 - settings_reader.load_yaml_file.112 - Settings file "C:\PycharmProjects\dtPyAppFramework\samples\multiprocessing/data/usr\config.yaml" does not exist.
+2025-09-05 14:29:02,379 - INFO - default_multiprocessing_job.11152 - MainThread.5172 - __init__.__init__.14 - Loading Cloud Session Manager
+2025-09-05 14:29:02,433 - INFO - default_multiprocessing_job.11152 - MainThread.5172 - __init__.__initialise_spawned_application__.111 - SPAWNED PROCESS --- Multiprocessing Application (multiprocessing_app), Version: 1.0. 
+2025-09-05 14:29:02,434 - INFO - default_multiprocessing_job.11152 - Thread-7 (state_check).7376 - multiprocessing.state_check.161 - Starting Worker State Monitor Thread
+2025-09-05 14:29:02,434 - INFO - default_multiprocessing_job.11152 - MainThread.5172 - multiprocessing_app.start_worker_instance.15 - Working with Key: bob
+2025-09-05 14:29:03,450 - INFO - default_multiprocessing_job.11152 - MainThread.5172 - multiprocessing_app.start_worker_instance.18 - Finished Value: 2
+2025-09-05 14:29:11,777 - INFO - default_multiprocessing_job.11152 - Thread-7 (state_check).7376 - multiprocessing.close.182 - Closed Process
+2025-09-05 14:29:11,777 - INFO - default_multiprocessing_job.11152 - Thread-7 (state_check).7376 - multiprocessing.state_check.178 - Worker State Monitor Thread Ended

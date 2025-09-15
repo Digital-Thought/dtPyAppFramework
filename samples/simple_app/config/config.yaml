@@ -1,0 +1,18 @@
+test_setting:
+  app_core: Application, CORE Setting Value
+
+logging:
+  level: DEBUG
+  log_to_console: False
+#secrets_manager:
+#  cloud_stores:
+#    test1:
+#      store_type: aws
+#      priority: 100
+#      aws_profile: key
+#      aws_region: ap-southeast-2
+#      aws_access_key_id: <KEY ID>
+#      aws_secret_access_key: <KEY SECRET>
+#      secret_name: test_user
+
+

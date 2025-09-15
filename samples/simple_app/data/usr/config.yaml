@@ -1,0 +1,64 @@
+test_setting:
+  user: SEC/test1
+  bob:
+    - ENV/DEV_MODE
+    - SEC/test1
+  sub:
+    sub1: ENV/DEV_MODE
+
+#cloud_sessions:
+#
+#  - name: aws_key_session  #just a friendly descriptive name for the session
+#    session_type: aws #supports either aws or azure
+#    settings: #settings for the specific type of cloud session being defined
+#      aws_profile: key
+#      aws_region: ap-southeast-2
+#      aws_access_key_id: <KEY ID>
+#      aws_secret_access_key: <KEY SECRET>
+#
+#  - name: aws_ec2_session
+#    session_type: aws
+#    settings:
+#      aws_profile: ec2
+#      aws_region: ap-southeast-2
+#
+#  - name: aws_sso_session
+#    session_type: aws
+#    settings:
+#      aws_profile: sso:default
+#      aws_region: ap-southeast-2
+#
+#  - name: azure_interactive_session
+#    session_type: Azure
+#    settings:
+#      azure_identity_type: interactive_browser
+#      azure_tenant_id: 123
+#
+#  - name: azure_certificate_session
+#    session_type: Azure
+#    settings:
+#      azure_identity_type: certificate
+#      azure_tenant_id: 123
+#      azure_client_id: 123
+#      certificate_path: <PATH TO CERT>
+#      certificate_password: <CERT PASSWORD>
+#
+#  - name: azure_client_secret_session
+#    session_type: Azure
+#    settings:
+#      azure_identity_type: client_secret
+#      azure_tenant_id: 123
+#      azure_client_id: 123
+#      client_secret: 123
+#
+#
+#
+#secrets_manager:
+#  cloud_stores:
+#    test1:
+#      store_type: aws
+#      priority: 100
+#      session_name: aws_ec2_session #referenced from defined cloud session under "cloud sessions"
+#      secret_name: test_user
+
+

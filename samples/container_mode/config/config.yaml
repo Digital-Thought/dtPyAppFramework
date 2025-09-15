@@ -1,0 +1,52 @@
+# Container Mode Sample Configuration
+# This is the single configuration file used in container mode
+
+app:
+  name: "Container Mode Sample"
+  version: "1.0.0"
+  debug: true
+  environment: "container"
+
+# Database configuration (would typically come from environment variables or secrets)
+database:
+  host: "ENV/DB_HOST"  # Will resolve to environment variable DB_HOST
+  port: 5432
+  name: "sampledb"
+  # Connection string from secrets: "SEC/db_connection_string"
+
+# API configuration
+api:
+  base_url: "https://api.example.com"
+  timeout: 30
+  retries: 3
+  key: "SEC/api_key"  # Will resolve from secrets manager
+
+# Logging configuration
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  console: true
+  file: true
+
+# Container-specific settings
+container:
+  health_check_interval: 30
+  graceful_shutdown_timeout: 10
+  max_memory_mb: 512
+  
+# Feature flags
+features:
+  enable_monitoring: true
+  enable_metrics: true
+  enable_tracing: false
+
+# Sample nested configuration
+sample:
+  nested:
+    value1: "test"
+    value2: 42
+    value3: true
+  list_data:
+    - "item1"
+    - "item2" 
+    - "item3"

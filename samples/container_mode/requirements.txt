@@ -1,0 +1,23 @@
+# Container Mode Sample - Additional Requirements
+# 
+# NOTE: This sample uses the main project requirements from ../../requirements.txt
+# The main project requirements include all core dtPyAppFramework dependencies:
+# - PyYAML~=6.0.2 (configuration files)
+# - psutil~=6.1.0 (process management)  
+# - cryptography~=44.0.0 (secrets encryption)
+# - colorlog~=6.9.0 (console logging)
+# - boto3~=1.35.54 (AWS integration)
+# - azure-identity & azure-keyvault-secrets (Azure integration)
+# - watchdog~=6.0.0 (file monitoring)
+# - InquirerPy (interactive CLI)
+# - pytest~=8.3.3, pytest-mock, pytest-watch (testing)
+#
+# This file only contains ADDITIONAL dependencies for the container sample:
+
+# Optional: Enhanced container features (uncomment if needed)
+# redis>=4.0.0  # For Redis caching/sessions with Docker Compose
+# requests>=2.25.0  # For HTTP API calls in demonstrations
+# prometheus-client>=0.15.0  # For metrics export to monitoring systems
+
+# Note: In most cases, you won't need additional dependencies beyond 
+# the main project requirements.txt for basic container mode usage.
