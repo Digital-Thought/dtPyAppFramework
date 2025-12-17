@@ -25,12 +25,22 @@ Added
 - **Container-specific temp paths**: In container mode, temp directories now use ``{container_name}_{process_id}`` structure to prevent collisions between container instances
 - **Container-specific log paths**: In container mode, logs are now organised under ``{container_name}/{timestamp}`` structure for easier log management across multiple containers
 - **Container identifier resolution**: New ``_get_container_identifier()`` method supporting ``CONTAINER_NAME``, ``POD_NAME``, ``HOSTNAME`` environment variables
+- **Improved application shutdown handling**: New ``wait_for_shutdown()`` method for long-running applications and ``request_shutdown()`` for programmatic shutdown
+- **Auto-exit for one-shot applications**: Applications that simply return from ``main()`` now exit automatically without needing to call shutdown methods
+- New sample application ``daemon_app.py`` demonstrating long-running application pattern
 
 Changed
 -------
 - ``PasswordProtectedKeystoreWithHMAC`` class now supports multi-process concurrent access with automatic file locking
 - Improved keystore write reliability with atomic file operations
 - Container mode path structure now supports multiple containers sharing the same volume mounts
+- ``ProcessManager.__main__()`` now auto-detects one-shot vs long-running applications
+- Signal handlers now use ``request_shutdown()`` instead of deprecated ``call_shutdown()``
+- Updated ``simple_app/dev_app.py`` sample to demonstrate one-shot pattern (no explicit shutdown call needed)
+
+Deprecated
+----------
+- ``ProcessManager.call_shutdown()`` is now deprecated in favour of ``request_shutdown()`` (still works for backward compatibility)
 
 [4.0.0] - 2025-12-01
 ====================

@@ -81,6 +81,11 @@ Key Features:
   * Provides cleanup coordination
   * Manages exit procedures
 
+**Shutdown Methods**
+  * ``request_shutdown()``: Signal the application to shut down gracefully
+  * ``wait_for_shutdown()``: Block until shutdown is requested (for long-running apps)
+  * ``handle_shutdown()``: Internal cleanup method (called automatically)
+
 **Service Integration**
   * Windows service support through pywin32
   * Service installation and management
@@ -141,6 +146,75 @@ Basic Application Structure
     if __name__ == "__main__":
         app = MyApplication()
         app.run()
+
+Application Lifecycle Patterns
+------------------------------
+
+The framework supports two primary application patterns:
+
+**One-Shot Applications**
+
+One-shot applications perform their work in ``main()`` and then exit automatically.
+Simply return from your ``main()`` method - the framework handles cleanup.
+
+.. code-block:: python
+
+    class OneShotApp(AbstractApp):
+        def main(self, args):
+            # Do your work
+            process_data()
+            generate_report()
+
+            # Just return - framework handles shutdown automatically
+            # No need to call request_shutdown() or handle_shutdown()
+
+        def exiting(self):
+            logging.info('Cleanup complete')
+
+**Long-Running Applications (Daemons/Services)**
+
+Long-running applications start background services and wait for a shutdown signal.
+Use ``ProcessManager().wait_for_shutdown()`` to block until shutdown is requested.
+
+.. code-block:: python
+
+    from dtPyAppFramework.process import ProcessManager
+
+    class DaemonApp(AbstractApp):
+        def main(self, args):
+            # Start background services
+            self.start_http_server()
+            self.start_worker_threads()
+
+            logging.info('Services started, waiting for shutdown signal...')
+
+            # Block until Ctrl+C, SIGTERM, or request_shutdown() is called
+            ProcessManager().wait_for_shutdown()
+
+            # After wait_for_shutdown() returns, stop services
+            self.stop_services()
+
+        def exiting(self):
+            logging.info('Daemon shutdown complete')
+
+**Programmatic Shutdown**
+
+For long-running applications, you can trigger shutdown programmatically:
+
+.. code-block:: python
+
+    from dtPyAppFramework.process import ProcessManager
+
+    # From anywhere in your application (e.g., REST endpoint, scheduled task)
+    ProcessManager().request_shutdown()
+
+**Shutdown Flow**
+
+1. Shutdown signal received (SIGINT, SIGTERM, or ``request_shutdown()`` call)
+2. ``wait_for_shutdown()`` returns (if called)
+3. ``main()`` method completes
+4. ``exiting()`` callback is executed
+5. Framework performs final cleanup
 
 Console vs Service Mode
 -----------------------
