@@ -105,23 +105,91 @@ In production mode, the framework uses platform-specific standard locations:
 Container Mode Paths
 ---------------------
 
-When ``CONTAINER_MODE`` is enabled (via ``--container`` flag or ``CONTAINER_MODE`` environment variable), all directories are created within the working directory with a simplified structure optimized for containers:
+When ``CONTAINER_MODE`` is enabled (via ``--container`` flag or ``CONTAINER_MODE`` environment variable), all directories are created within the working directory with a structure optimised for multi-container deployments:
 
 .. code-block:: text
 
     Working Directory/
-    ├── config/                  # Configuration files (single layer)
-    ├── data/                    # Unified data directory
-    │   ├── keystore/           # Secret storage
-    │   └── resources/          # Application resources
-    ├── logs/                   # All log files
-    └── temp/                   # Temporary files
+    ├── config/                           # Configuration files (single layer)
+    ├── data/                             # Unified data directory
+    │   ├── keystore/                    # Secret storage
+    │   └── resources/                   # Application resources
+    ├── logs/
+    │   └── {container_name}/            # Container-specific log folder
+    │       └── {timestamp}/             # Timestamped log sessions
+    └── temp/
+        └── {container_name}_{pid}/      # Process-isolated temp folder
+
+**Container Identifier Resolution**
+
+The container name is determined from the following environment variables (in order of priority):
+
+1. ``CONTAINER_NAME`` - Explicitly set container name
+2. ``POD_NAME`` - Kubernetes pod name
+3. ``HOSTNAME`` - Docker default (usually container ID or custom hostname)
+4. Fallback to ``socket.gethostname()``
+
+**Example Docker Compose Configuration:**
+
+.. code-block:: yaml
+
+    version: '3.8'
+    services:
+      coordinator:
+        image: myapp:latest
+        hostname: coordinator
+        environment:
+          - CONTAINER_MODE=true
+          - CONTAINER_NAME=coordinator
+        volumes:
+          - app_logs:/app/logs
+          - app_temp:/app/temp
+
+      worker:
+        image: myapp:latest
+        deploy:
+          replicas: 3
+        environment:
+          - CONTAINER_MODE=true
+          # CONTAINER_NAME not set - uses HOSTNAME (e.g., worker_1, worker_2)
+        volumes:
+          - app_logs:/app/logs
+          - app_temp:/app/temp
+
+    volumes:
+      app_logs:
+      app_temp:
+
+**Resulting Directory Structure (with 3 workers):**
+
+.. code-block:: text
+
+    /app/
+    ├── logs/
+    │   ├── coordinator/
+    │   │   └── 20251217_140532/
+    │   │       ├── info-myapp.log
+    │   │       └── error-myapp.log
+    │   ├── worker_1/
+    │   │   └── 20251217_140535/
+    │   ├── worker_2/
+    │   │   └── 20251217_140536/
+    │   └── worker_3/
+    │       └── 20251217_140537/
+    └── temp/
+        ├── coordinator_1/
+        ├── worker_1_42/
+        ├── worker_2_43/
+        └── worker_3_44/
 
 Key characteristics of container mode:
+
 - **Single Configuration Layer**: Only ``./config/config.yaml`` is used
 - **Volume Mount Ready**: Directory structure designed for persistent volume mounting
+- **Container Isolation**: Logs and temp files organised by container name
+- **Process Isolation**: Temp directories include process ID to prevent collisions
 - **Simplified Permissions**: No multi-user directory handling
-- **Environment Integration**: Optimized for container orchestration platforms
+- **Environment Integration**: Optimised for container orchestration platforms
 
 Development Mode Paths
 ----------------------

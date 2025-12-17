@@ -12,7 +12,7 @@ and this project adheres to `Semantic Versioning <https://semver.org/spec/v2.0.0
 
 *No unreleased changes.*
 
-[4.0.1] - 2025-12-17
+[4.0.1] - 2025-12-18
 ====================
 
 Added
@@ -22,11 +22,15 @@ Added
 - **Configurable lock timeout**: Lock acquisition timeout can be configured via ``KEYSTORE_LOCK_TIMEOUT`` environment variable (default: 30 seconds)
 - Added ``filelock~=3.16.0`` dependency for cross-platform file locking support
 - Documentation for multi-process and container access patterns in secrets management guide
+- **Container-specific temp paths**: In container mode, temp directories now use ``{container_name}_{process_id}`` structure to prevent collisions between container instances
+- **Container-specific log paths**: In container mode, logs are now organised under ``{container_name}/{timestamp}`` structure for easier log management across multiple containers
+- **Container identifier resolution**: New ``_get_container_identifier()`` method supporting ``CONTAINER_NAME``, ``POD_NAME``, ``HOSTNAME`` environment variables
 
 Changed
 -------
 - ``PasswordProtectedKeystoreWithHMAC`` class now supports multi-process concurrent access with automatic file locking
 - Improved keystore write reliability with atomic file operations
+- Container mode path structure now supports multiple containers sharing the same volume mounts
 
 [4.0.0] - 2025-12-01
 ====================

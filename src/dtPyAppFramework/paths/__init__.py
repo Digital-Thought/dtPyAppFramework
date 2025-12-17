@@ -2,6 +2,7 @@ import platform
 import os
 import shutil
 import logging
+import socket
 
 from multiprocessing import current_process
 from ..decorators import singleton
@@ -87,17 +88,57 @@ class ApplicationPaths(object):
         else:
             return platform.system()
 
+    def _get_container_identifier(self):
+        """
+        Get a unique identifier for the current container instance.
+
+        This method attempts to determine the container name from various
+        environment variables commonly set in containerised environments.
+
+        The lookup order is:
+            1. CONTAINER_NAME - explicitly set container name
+            2. POD_NAME - Kubernetes pod name
+            3. HOSTNAME - Docker default (usually container ID or custom hostname)
+            4. Fallback to socket.gethostname()
+
+        Returns:
+            str: Container identifier suitable for use in path names.
+        """
+        # Check for explicitly set container name
+        container_name = os.environ.get('CONTAINER_NAME')
+        if container_name:
+            return container_name
+
+        # Check for Kubernetes pod name
+        pod_name = os.environ.get('POD_NAME')
+        if pod_name:
+            return pod_name
+
+        # Use HOSTNAME (Docker sets this to container ID by default)
+        hostname = os.environ.get('HOSTNAME')
+        if hostname:
+            return hostname
+
+        # Fallback to socket hostname
+        return socket.gethostname()
+
     def __init_logging_root_path(self):
         """
-        Initialize the logging root path based on the operating system.
+        Initialise the logging root path based on the operating system.
+
+        In container mode, logs are organised under a container-specific subfolder
+        to support multiple containers sharing the same log volume. The structure
+        becomes: {base_log_path}/{container_name}/{timestamp}/
 
         Returns:
             str: Logging root path.
         """
         _path = None
         if os.environ.get("CONTAINER_MODE", None):
-            # Container mode: logs in working directory
-            _path = f'{os.getcwd()}/logs'
+            # Container mode: logs organised by container name
+            # Structure: {cwd}/logs/{container_name}/{timestamp}/
+            container_id = self._get_container_identifier()
+            _path = f'{os.getcwd()}/logs/{container_id}'
         elif os.environ.get("DEV_MODE", None):
             _path = f'{os.getcwd()}/logs'
         elif self.__os() == "Windows":
@@ -158,15 +199,23 @@ class ApplicationPaths(object):
 
     def __init_tmp_root_path(self):
         """
-        Initialize the temporary root path based on the operating system.
+        Initialise the temporary root path based on the operating system.
+
+        In container mode, temp directories are organised under a unique folder
+        combining the container name and process ID to prevent collisions between
+        multiple container instances sharing the same temp volume. The structure
+        becomes: {base_temp_path}/{container_name}_{process_id}/
 
         Returns:
             str: Temporary root path.
         """
         _path = None
         if os.environ.get("CONTAINER_MODE", None):
-            # Container mode: temp directory in working directory
-            _path = f'{os.getcwd()}/temp'
+            # Container mode: temp directory with container name and process ID
+            # Structure: {cwd}/temp/{container_name}_{pid}/
+            container_id = self._get_container_identifier()
+            process_id = os.getpid()
+            _path = f'{os.getcwd()}/temp/{container_id}_{process_id}'
         elif os.environ.get("DEV_MODE", None):
             _path = f'{os.getcwd()}/temp'
         elif self.__os() == "Windows":
