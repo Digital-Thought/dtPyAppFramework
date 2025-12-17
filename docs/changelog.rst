@@ -10,17 +10,45 @@ and this project adheres to `Semantic Versioning <https://semver.org/spec/v2.0.0
 [Unreleased]
 ============
 
+*No unreleased changes.*
+
+[4.0.1] - 2025-12-17
+====================
+
+Added
+-----
+- **Multi-process file locking for local keystore**: Added thread-safe access to local secrets store via file locking, enabling multiple containers/processes to safely share the same keystore file
+- **Atomic write operations for keystore**: Keystore writes now use atomic file operations (write to temp file, then rename) to prevent data corruption during concurrent access
+- **Configurable lock timeout**: Lock acquisition timeout can be configured via ``KEYSTORE_LOCK_TIMEOUT`` environment variable (default: 30 seconds)
+- Added ``filelock~=3.16.0`` dependency for cross-platform file locking support
+- Documentation for multi-process and container access patterns in secrets management guide
+
+Changed
+-------
+- ``PasswordProtectedKeystoreWithHMAC`` class now supports multi-process concurrent access with automatic file locking
+- Improved keystore write reliability with atomic file operations
+
+[4.0.0] - 2025-12-01
+====================
+
 Added
 -----
 - Comprehensive RST documentation with modular structure
 - Component-specific documentation for all major framework parts
 - API reference documentation with examples
 - Installation and getting started guides
+- Enhanced ``SystemPasswordGenerator`` for secure keystore access in containerised environments
+- v3keystore format with improved security and entropy
 
 Changed
 -------
-- Improved documentation organization with separate component documents
+- Improved documentation organisation with separate component documents
 - Enhanced code examples and usage patterns
+- Migrated to v3keystore format with automatic migration from v2keystore
+
+Removed
+-------
+- Deprecated v1 keystore format support
 
 [3.1.0] - 2024-01-15
 =====================
@@ -156,8 +184,8 @@ Support Matrix
 Current Version Support
 -----------------------
 
-- **3.1.x**: Active development, full support
-- **3.0.x**: Security updates only
+- **4.0.x**: Active development, full support
+- **3.x**: Security updates only
 - **2.x**: End of life, no updates
 
 Python Version Support

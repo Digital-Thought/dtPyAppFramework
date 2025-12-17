@@ -14,3 +14,4 @@ azure-core~=1.32.0
 pywin32;platform_system == "Windows"
 InquirerPy
 deprecated
+filelock~=3.16.0

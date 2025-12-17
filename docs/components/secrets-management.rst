@@ -425,7 +425,7 @@ Local secrets are automatically shared with spawned processes through secure int
     from dtPyAppFramework.settings import Settings
     settings = Settings()
     settings.secret_manager.set_secret('shared_key', 'secret_value')
-    
+
     # Spawn child process
     from dtPyAppFramework.process import MultiProcessingManager
     manager = MultiProcessingManager()
@@ -434,12 +434,117 @@ Local secrets are automatically shared with spawned processes through secure int
         worker_count=1,
         target=worker_function
     )
-    
+
     def worker_function():
         # Child process automatically has access to secrets
         from dtPyAppFramework.settings import Settings
         settings = Settings()
         shared_key = settings.secret_manager.get_secret('shared_key')
+
+Multi-Process and Container Access
+----------------------------------
+
+The local keystore supports concurrent access from multiple processes or containers sharing the same keystore file. This is essential for containerised deployments where multiple worker containers need access to shared secrets.
+
+**File Locking Mechanism**
+
+The keystore uses advisory file locking via the ``filelock`` library to prevent race conditions and data corruption when multiple processes access the same keystore file simultaneously.
+
+.. code-block:: text
+
+    ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+    │  Worker 1   │     │  Worker 2   │     │  Worker N   │
+    └──────┬──────┘     └──────┬──────┘     └──────┬──────┘
+           │                   │                   │
+           └───────────────────┼───────────────────┘
+                               │
+                               ▼
+                    ┌─────────────────────┐
+                    │  File Lock (.lock)  │
+                    └──────────┬──────────┘
+                               │
+                               ▼
+                    ┌─────────────────────┐
+                    │  Local Keystore     │
+                    │  (.v3keystore)      │
+                    └─────────────────────┘
+
+**Key Features:**
+
+* **Exclusive Locking**: Write operations (set, delete) acquire an exclusive lock
+* **Atomic Writes**: Data is written to a temporary file first, then atomically renamed
+* **Configurable Timeout**: Lock acquisition timeout can be configured via environment variable
+* **Cross-Platform**: Works on Linux, Windows, and macOS
+
+**Configuration:**
+
+The lock timeout can be configured via the ``KEYSTORE_LOCK_TIMEOUT`` environment variable:
+
+.. code-block:: bash
+
+    # Set lock timeout to 60 seconds (default is 30 seconds)
+    export KEYSTORE_LOCK_TIMEOUT=60
+
+**Docker Compose Example:**
+
+.. code-block:: yaml
+
+    version: '3.8'
+    services:
+      coordinator:
+        image: myapp:latest
+        environment:
+          - KEYSTORE_PASSWORD=secure_shared_password
+          - KEYSTORE_LOCK_TIMEOUT=60
+        volumes:
+          - keystore_data:/app/data
+
+      worker:
+        image: myapp:latest
+        deploy:
+          replicas: 3
+        environment:
+          - KEYSTORE_PASSWORD=secure_shared_password
+          - KEYSTORE_LOCK_TIMEOUT=60
+        volumes:
+          - keystore_data:/app/data
+
+    volumes:
+      keystore_data:
+
+**Important Considerations:**
+
+1. **Shared Volume Required**: All containers must mount the same volume for the keystore file
+2. **Consistent Password**: All processes must use the same ``KEYSTORE_PASSWORD`` environment variable
+3. **Network Filesystems**: File locking behaviour may vary on network filesystems (NFS, CIFS). For production deployments on network storage, consider using a cloud-based secrets manager instead
+4. **Lock Contention**: Under heavy concurrent access, processes may need to wait for the lock. Adjust ``KEYSTORE_LOCK_TIMEOUT`` as needed
+
+**Error Handling:**
+
+When a lock cannot be acquired within the timeout period, a ``FileLockTimeout`` exception is raised:
+
+.. code-block:: python
+
+    from filelock import Timeout as FileLockTimeout
+    from dtPyAppFramework.settings import Settings
+
+    settings = Settings()
+
+    try:
+        secret = settings.secret_manager.get_secret('my_secret')
+    except FileLockTimeout:
+        logging.error("Could not acquire keystore lock - another process may be holding it")
+        # Implement retry logic or fallback behaviour
+
+**Read-Only Worker Pattern:**
+
+For deployments where workers only need to read secrets, consider using read-only mode to reduce lock contention:
+
+.. code-block:: python
+
+    # In worker configuration
+    # Workers can still read but cannot modify the keystore
+    # This reduces write lock contention in high-concurrency scenarios
 
 Advanced Usage
 ==============
