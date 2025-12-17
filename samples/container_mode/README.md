@@ -12,7 +12,7 @@ This sample demonstrates how to use dtPyAppFramework in container environments (
 - **Logging**: Container-friendly logging setup
 - **Auto-Detection**: Automatic container environment detection
 
-## 📁 Directory Structure
+## 📁 Directory Ste
 
 ### Standard Mode (Default)
 ```

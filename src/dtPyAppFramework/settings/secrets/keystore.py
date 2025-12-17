@@ -16,8 +16,10 @@ import uuid
 import base64
 import hmac
 import time
+import tempfile
 from typing import Optional, Dict, List
 from pathlib import Path
+from filelock import FileLock, Timeout as FileLockTimeout
 
 class SystemPasswordGenerator:
     """
@@ -372,9 +374,12 @@ class PasswordProtectedKeystoreWithHMAC:
     PasswordProtectedKeystoreWithHMAC provides a mechanism to securely store key-value pairs
     in a file. The data is protected using encryption and integrity is ensured by HMAC.
 
+    This class supports multi-process access through file locking, making it safe to use
+    in containerised environments where multiple workers share the same keystore file.
+
     Methods:
-        __init__(keystore_path, password):
-            Initializes the keystore with the provided path and password.
+        __init__(keystore_path, password, lock_timeout):
+            Initialises the keystore with the provided path, password, and optional lock timeout.
 
         _derive_key(salt):
             Derives an encryption key from the password and salt using PBKDF2.
@@ -389,20 +394,49 @@ class PasswordProtectedKeystoreWithHMAC:
             Loads the keystore from the file, verifying its integrity and returning the stored data.
 
         _save_keystore(data):
-            Saves the provided data to the keystore file, including the generated HMAC for integrity.
+            Saves the provided data to the keystore file atomically, including the generated HMAC for integrity.
 
         set(key, value):
-            Adds or updates a key-value pair in the keystore.
+            Adds or updates a key-value pair in the keystore (thread-safe).
 
         get(key):
-            Retrieves a value from the keystore by its key.
+            Retrieves a value from the keystore by its key (thread-safe).
 
         delete(key):
-            Deletes a key-value pair from the keystore.
+            Deletes a key-value pair from the keystore (thread-safe).
+
+    Attributes:
+        lock_timeout (int): Maximum time in seconds to wait for acquiring the file lock.
+            Default is 30 seconds. Set via KEYSTORE_LOCK_TIMEOUT environment variable.
     """
-    def __init__(self, keystore_path, password):
+
+    # Default lock timeout in seconds
+    DEFAULT_LOCK_TIMEOUT = 30
+
+    def __init__(self, keystore_path, password, lock_timeout: int = None):
+        """
+        Initialise the keystore with file locking support for multi-process safety.
+
+        Args:
+            keystore_path: Path to the keystore file.
+            password: Password for encrypting/decrypting the keystore.
+            lock_timeout: Maximum time in seconds to wait for the file lock.
+                         Defaults to KEYSTORE_LOCK_TIMEOUT env var or 30 seconds.
+        """
         self.keystore_path = keystore_path
         self.password = password.encode()
+
+        # Configure lock timeout from parameter, environment, or default
+        if lock_timeout is not None:
+            self.lock_timeout = lock_timeout
+        else:
+            self.lock_timeout = int(os.environ.get('KEYSTORE_LOCK_TIMEOUT', self.DEFAULT_LOCK_TIMEOUT))
+
+        # Create file lock for multi-process synchronisation
+        self.lock_path = f"{keystore_path}.lock"
+        self._file_lock = FileLock(self.lock_path, timeout=self.lock_timeout)
+
+        logging.debug(f"Keystore initialised with lock timeout: {self.lock_timeout}s, lock file: {self.lock_path}")
 
     def _derive_key(self, salt):
         """
@@ -546,8 +580,19 @@ class PasswordProtectedKeystoreWithHMAC:
 
     def _save_keystore(self, data):
         """
+        Save data to the keystore using atomic write operations.
+
+        This method writes data to a temporary file first, then atomically
+        renames it to the target path. This ensures that the keystore file
+        is never left in a partially-written state, even if the process is
+        interrupted during the write operation.
+
         Args:
             data: The data to be saved in the keystore, which will be encrypted and stored securely.
+
+        Raises:
+            OSError: If the atomic rename operation fails.
+            Exception: If encryption or file operations fail.
         """
         # Generate a random 16-byte salt
         salt = os.urandom(16)
@@ -560,53 +605,141 @@ class PasswordProtectedKeystoreWithHMAC:
         encrypted_data = cipher_suite.encrypt(json.dumps(data).encode())
 
         # Generate the HMAC
-        hmac = self._generate_hmac(salt + encrypted_data, derived_key)
+        hmac_value = self._generate_hmac(salt + encrypted_data, derived_key)
 
-        # Write the salt, encrypted data, and HMAC to the file
-        with open(self.keystore_path, 'wb') as file:
-            file.write(salt)
-            file.write(encrypted_data)
-            file.write(hmac)
+        # Prepare the complete file content
+        file_content = salt + encrypted_data + hmac_value
+
+        # Use atomic write: write to temp file, then rename
+        dir_name = os.path.dirname(self.keystore_path) or '.'
+        fd = None
+        temp_path = None
+
+        try:
+            # Create temporary file in the same directory to ensure atomic rename works
+            fd, temp_path = tempfile.mkstemp(dir=dir_name, suffix='.tmp', prefix='keystore_')
+
+            # Write all content to the temporary file
+            with os.fdopen(fd, 'wb') as temp_file:
+                fd = None  # os.fdopen takes ownership of the file descriptor
+                temp_file.write(file_content)
+                temp_file.flush()
+                os.fsync(temp_file.fileno())  # Ensure data is written to disk
+
+            # Atomic rename (on POSIX systems this is atomic, on Windows it replaces)
+            os.replace(temp_path, self.keystore_path)
+            temp_path = None  # Successfully moved, don't try to clean up
+
+            logging.debug(f"Keystore saved atomically to {self.keystore_path}")
+
+        except Exception as e:
+            logging.error(f"Failed to save keystore atomically: {e}")
+            raise
+        finally:
+            # Clean up the file descriptor if still open
+            if fd is not None:
+                try:
+                    os.close(fd)
+                except OSError:
+                    pass
+
+            # Clean up temporary file if it still exists
+            if temp_path is not None:
+                try:
+                    os.unlink(temp_path)
+                except OSError:
+                    pass
 
     def set(self, key, value):
         """
+        Add or update a key-value pair in the keystore (thread-safe).
+
+        This method acquires an exclusive file lock before modifying the keystore,
+        ensuring that concurrent processes do not corrupt the data.
+
         Args:
             key: The key to be stored in the keystore.
             value: The value associated with the key to be stored.
+
+        Raises:
+            FileLockTimeout: If the lock cannot be acquired within the timeout period.
         """
-        keystore = self._load_keystore()
-        keystore[key] = value
-        self._save_keystore(keystore)
-        logging.debug(f"Key '{key}' stored successfully.")
+        try:
+            with self._file_lock:
+                keystore = self._load_keystore()
+                keystore[key] = value
+                self._save_keystore(keystore)
+                logging.debug(f"Key '{key}' stored successfully.")
+        except FileLockTimeout:
+            logging.error(f"Timeout acquiring lock to set key '{key}' in keystore after {self.lock_timeout}s")
+            raise
 
     def get(self, key):
         """
-        Retrieves the value associated with the specified key from the keystore.
+        Retrieve a value from the keystore by its key (thread-safe).
+
+        This method acquires a file lock before reading the keystore,
+        ensuring consistent reads even when other processes are writing.
 
         Args:
             key: The key whose associated value is to be returned.
 
         Returns:
             The value corresponding to the specified key if it exists, otherwise None.
+
+        Raises:
+            FileLockTimeout: If the lock cannot be acquired within the timeout period.
         """
-        keystore = self._load_keystore()
-        logging.debug(f"Retrieving Key '{key}'")
-        return keystore.get(key)
+        try:
+            with self._file_lock:
+                keystore = self._load_keystore()
+                logging.debug(f"Retrieving Key '{key}'")
+                return keystore.get(key)
+        except FileLockTimeout:
+            logging.error(f"Timeout acquiring lock to get key '{key}' from keystore after {self.lock_timeout}s")
+            raise
 
     def get_all(self):
-        return self._load_keystore()
+        """
+        Retrieve all key-value pairs from the keystore (thread-safe).
+
+        This method acquires a file lock before reading the keystore.
+
+        Returns:
+            Dictionary containing all key-value pairs in the keystore.
+
+        Raises:
+            FileLockTimeout: If the lock cannot be acquired within the timeout period.
+        """
+        try:
+            with self._file_lock:
+                return self._load_keystore()
+        except FileLockTimeout:
+            logging.error(f"Timeout acquiring lock to get all keys from keystore after {self.lock_timeout}s")
+            raise
 
     def delete(self, key):
         """
-        Deletes the specified key from the keystore if it exists.
+        Delete a key-value pair from the keystore (thread-safe).
+
+        This method acquires an exclusive file lock before modifying the keystore,
+        ensuring that concurrent processes do not corrupt the data.
 
         Args:
             key: The key to be deleted from the keystore.
+
+        Raises:
+            FileLockTimeout: If the lock cannot be acquired within the timeout period.
         """
-        keystore = self._load_keystore()
-        if key in keystore:
-            del keystore[key]
-            self._save_keystore(keystore)
-            logging.debug(f"Key '{key}' deleted successfully.")
-        else:
-            logging.debug(f"Key '{key}' not found in the keystore.")
+        try:
+            with self._file_lock:
+                keystore = self._load_keystore()
+                if key in keystore:
+                    del keystore[key]
+                    self._save_keystore(keystore)
+                    logging.debug(f"Key '{key}' deleted successfully.")
+                else:
+                    logging.debug(f"Key '{key}' not found in the keystore.")
+        except FileLockTimeout:
+            logging.error(f"Timeout acquiring lock to delete key '{key}' from keystore after {self.lock_timeout}s")
+            raise
