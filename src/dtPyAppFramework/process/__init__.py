@@ -79,6 +79,8 @@ class ProcessManager():
         self.stderr_txt_file = None
         self.running = threading.Event()
         self.spawned_running_event = None
+        self._shutdown_requested = False  # Track if shutdown was explicitly requested
+        self._waiting_for_shutdown = False  # Track if app called wait_for_shutdown()
 
     def __initialise_spawned_application__(self, parent_log_path, job_id, worker_id, job_name, pipe_registry, running_event):
         """
@@ -171,8 +173,8 @@ class ProcessManager():
                                      exit_function=self.call_shutdown)
 
                 else:
-                    signal.signal(signal.SIGINT, self.call_shutdown)
-                    signal.signal(signal.SIGTERM, self.call_shutdown)
+                    signal.signal(signal.SIGINT, self.request_shutdown)
+                    signal.signal(signal.SIGTERM, self.request_shutdown)
                     self.__main__(args)
 
         except KeyboardInterrupt as kbi:
@@ -317,33 +319,125 @@ class ProcessManager():
         settings.Settings().close()
 
     def handle_shutdown(self):
+        """
+        Perform shutdown cleanup operations.
+
+        This method is called automatically when the application exits.
+        It executes the exit_procedure callback and closes stdout/stderr capture files.
+
+        Note:
+            For most applications, you should not call this directly.
+            Use request_shutdown() to signal the application to stop, or
+            simply return from your main() method for one-shot applications.
+        """
         if self.exit_procedure:
             self.exit_procedure()
         if not self.console_app:
-            self.stdout_txt_file.close()
-            self.stderr_txt_file.close()
+            if self.stdout_txt_file:
+                self.stdout_txt_file.close()
+            if self.stderr_txt_file:
+                self.stderr_txt_file.close()
+
+    def request_shutdown(self, signum=None, frame=None):
+        """
+        Request the application to shut down gracefully.
+
+        This method signals the application to exit its main loop.
+        Use this for long-running applications that called wait_for_shutdown().
+
+        Args:
+            signum: Signal number (optional, used by signal handlers).
+            frame: Current stack frame (optional, used by signal handlers).
+
+        Example:
+            # In your main method for a long-running app:
+            def main(self, args):
+                # Start background tasks
+                self.start_workers()
+                # Wait for shutdown signal
+                ProcessManager().wait_for_shutdown()
+
+            # From elsewhere (e.g., a REST endpoint):
+            ProcessManager().request_shutdown()
+        """
+        logging.info('Shutdown requested')
+        self._shutdown_requested = True
+        self.running.clear()
 
     def call_shutdown(self, signum=None, frame=None):
-        self.running.clear()
+        """
+        Alias for request_shutdown() for backward compatibility.
+
+        Deprecated:
+            Use request_shutdown() instead for clarity.
+        """
+        self.request_shutdown(signum, frame)
+
+    def wait_for_shutdown(self, check_interval: float = 0.5):
+        """
+        Block until a shutdown signal is received.
+
+        Use this method in long-running applications (daemons, services) that need
+        to keep running until explicitly stopped. For one-shot applications that
+        complete their work and exit, simply return from your main() method.
+
+        Args:
+            check_interval: How often to check for shutdown signal (seconds).
+                           Default is 0.5 seconds.
+
+        Example:
+            class MyDaemon(AbstractApp):
+                def main(self, args):
+                    # Start your background services
+                    self.start_http_server()
+                    self.start_worker_threads()
+
+                    # Block until shutdown is requested
+                    ProcessManager().wait_for_shutdown()
+
+                    # Cleanup happens automatically after this returns
+        """
+        self._waiting_for_shutdown = True
+        logging.info('Application waiting for shutdown signal...')
+
+        while self.running.is_set():
+            time.sleep(check_interval)
+
+        logging.info('Shutdown signal received, proceeding with cleanup')
 
     def __main__(self, args):
         """
         Execute the main procedure of the application.
 
+        This method handles two application patterns:
+
+        1. One-shot applications: main() does its work and returns.
+           The application exits automatically after main() completes.
+
+        2. Long-running applications: main() calls wait_for_shutdown()
+           to block until a shutdown signal is received.
+
         Args:
             args: Parsed command-line arguments.
         """
-        logging.info('Starting application... __main__')
+        logging.info('Starting application...')
         self.running.set()
-        logging.info('Starting application... load_config')
         self.load_config()
-        logging.info('Starting application... main_procedure')
+
+        logging.debug('Executing main procedure')
         self.main_procedure(args)
 
-        logging.info('Starting application... waiting for not is_set')
-        while self.running.is_set():
-            time.sleep(0.5)
+        # If the app didn't explicitly wait for shutdown, it's a one-shot app
+        # that has completed its work - proceed directly to cleanup
+        if not self._waiting_for_shutdown:
+            logging.debug('Main procedure completed (one-shot mode)')
+            # Only wait if running is still set AND shutdown wasn't requested
+            # This handles the case where main() called request_shutdown()
+            if self.running.is_set() and not self._shutdown_requested:
+                logging.debug('Auto-initiating shutdown for one-shot application')
+                self.running.clear()
 
         self.handle_shutdown()
+        logging.info('Application shutdown complete')
 
 
