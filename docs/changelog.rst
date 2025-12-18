@@ -32,6 +32,7 @@ Changed
 - ``ProcessManager.__main__()`` now auto-detects one-shot vs long-running applications
 - Signal handlers now use ``request_shutdown()`` instead of deprecated ``call_shutdown()``
 - Updated ``simple_app/dev_app.py`` sample to demonstrate one-shot pattern (no explicit shutdown call needed)
+- **Container mode keystore password**: In CONTAINER_MODE, ``KEYSTORE_PASSWORD`` or ``SECRETS_STORE_PASSWORD`` environment variables are now used directly without system fingerprint or path mixing, ensuring consistent keystore access across multiple containers sharing the same keystore file
 
 Deprecated
 ----------
