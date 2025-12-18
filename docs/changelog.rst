@@ -12,6 +12,17 @@ and this project adheres to `Semantic Versioning <https://semver.org/spec/v2.0.0
 
 *No unreleased changes.*
 
+[4.0.3] - 2025-12-18
+====================
+
+Added
+-----
+- **Command-line keystore password**: New ``--password`` / ``-p`` argument to set ``KEYSTORE_PASSWORD`` environment variable from command line, providing an alternative to setting the environment variable directly
+
+Changed
+-------
+- **Container mode keystore password**: In CONTAINER_MODE, ``KEYSTORE_PASSWORD`` or ``SECRETS_STORE_PASSWORD`` environment variables are now used directly without system fingerprint or path mixing, ensuring consistent keystore access across multiple containers sharing the same keystore file
+
 [4.0.2] - 2025-12-18
 ====================
 
@@ -25,7 +36,6 @@ Added
 - New sample application ``daemon_app.py`` demonstrating long-running application pattern
 - Updated documentation for application lifecycle patterns in ``application.rst``
 - Updated documentation for container mode paths in ``paths-resources.rst``
-- **Command-line keystore password**: New ``--password`` / ``-p`` argument to set ``KEYSTORE_PASSWORD`` environment variable from command line, providing an alternative to setting the environment variable directly
 
 Changed
 -------
@@ -33,7 +43,6 @@ Changed
 - ``ProcessManager.__main__()`` now auto-detects one-shot vs long-running applications
 - Signal handlers now use ``request_shutdown()`` instead of deprecated ``call_shutdown()``
 - Updated ``simple_app/dev_app.py`` sample to demonstrate one-shot pattern (no explicit shutdown call needed)
-- **Container mode keystore password**: In CONTAINER_MODE, ``KEYSTORE_PASSWORD`` or ``SECRETS_STORE_PASSWORD`` environment variables are now used directly without system fingerprint or path mixing, ensuring consistent keystore access across multiple containers sharing the same keystore file
 
 Deprecated
 ----------
