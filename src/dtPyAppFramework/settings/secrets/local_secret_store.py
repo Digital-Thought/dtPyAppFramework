@@ -171,8 +171,38 @@ class LocalSecretStore(AbstractSecretStore):
             return self.v3_keystore_path, v3_password, "v3"
 
     def _generate_v3_password(self, custom_password: str = None) -> str:
-        """Generate secure password for v3keystore (new keystores)."""
+        """
+        Generate secure password for v3keystore (new keystores).
+
+        In CONTAINER_MODE with KEYSTORE_PASSWORD or SECRETS_STORE_PASSWORD set,
+        the environment password is used directly without any system fingerprint
+        or path mixing. This ensures consistency across multiple containers
+        sharing the same keystore file.
+
+        Args:
+            custom_password: Optional custom password provided by the caller.
+
+        Returns:
+            Password string for keystore encryption.
+        """
         logging.debug(f"_generate_v3_password called - custom_password: {'SET' if custom_password else 'NOT SET'}")
+
+        # In CONTAINER_MODE, prioritise KEYSTORE_PASSWORD for consistency across containers
+        container_mode = os.environ.get('CONTAINER_MODE', 'False').lower() == 'true'
+        docker_env = os.path.exists('/.dockerenv')
+        k8s_env = os.environ.get('KUBERNETES_SERVICE_HOST') is not None
+        is_container = container_mode or docker_env or k8s_env
+
+        keystore_password_env = os.environ.get('KEYSTORE_PASSWORD')
+        secrets_store_password_env = os.environ.get('SECRETS_STORE_PASSWORD')
+        env_password = keystore_password_env or secrets_store_password_env
+
+        if is_container and env_password:
+            env_var_name = 'KEYSTORE_PASSWORD' if keystore_password_env else 'SECRETS_STORE_PASSWORD'
+            logging.info(f"CONTAINER_MODE: Using {env_var_name} directly for keystore (no system fingerprint mixing)")
+            return env_password
+
+        # Non-container mode or no environment password set
         if custom_password:
             logging.debug(f"Using SystemPasswordGenerator with custom_password")
             # Use SystemPasswordGenerator for custom password strengthening

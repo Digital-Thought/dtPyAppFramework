@@ -476,6 +476,18 @@ The keystore uses advisory file locking via the ``filelock`` library to prevent 
 * **Configurable Timeout**: Lock acquisition timeout can be configured via environment variable
 * **Cross-Platform**: Works on Linux, Windows, and macOS
 
+**Container Mode Password Handling:**
+
+In container environments, the keystore password is handled specially to ensure consistency across multiple containers:
+
+* When ``CONTAINER_MODE=true`` (or running in Docker/Kubernetes), the ``KEYSTORE_PASSWORD`` or ``SECRETS_STORE_PASSWORD`` environment variable is used **directly** without any system fingerprint or path mixing
+* This ensures all containers sharing the same keystore file use the same encryption key
+* Without this, each container would generate a different key based on its unique system fingerprint (hostname, container ID, etc.)
+
+.. important::
+
+   In container deployments with shared keystores, you **MUST** set the ``KEYSTORE_PASSWORD`` environment variable to the same value across all containers. Without this, each container will be unable to decrypt secrets stored by other containers.
+
 **Configuration:**
 
 The lock timeout can be configured via the ``KEYSTORE_LOCK_TIMEOUT`` environment variable:

@@ -12,6 +12,17 @@ and this project adheres to `Semantic Versioning <https://semver.org/spec/v2.0.0
 
 *No unreleased changes.*
 
+[4.0.3] - 2025-12-18
+====================
+
+Added
+-----
+- **Command-line keystore password**: New ``--password`` / ``-p`` argument to set ``KEYSTORE_PASSWORD`` environment variable from command line, providing an alternative to setting the environment variable directly
+
+Changed
+-------
+- **Container mode keystore password**: In CONTAINER_MODE, ``KEYSTORE_PASSWORD`` or ``SECRETS_STORE_PASSWORD`` environment variables are now used directly without system fingerprint or path mixing, ensuring consistent keystore access across multiple containers sharing the same keystore file
+
 [4.0.2] - 2025-12-18
 ====================
 
