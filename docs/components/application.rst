@@ -48,16 +48,17 @@ Key Features:
 
 **Built-in Command Line Arguments**
   The framework provides several built-in command-line arguments:
-  
-  * ``--init``: Initialize environment and secrets
+
+  * ``--init``: Initialise environment and secrets
   * ``--add_secret``: Add secrets to the secret store
-  * ``--run``: Run the main application (default behavior if no other mode specified)
+  * ``--run``: Run the main application (default behaviour if no other mode specified)
   * ``--service``: Run as a Windows service
   * ``--console``: Enable console output
   * ``--single_folder``: Keep all directories in a single folder (development mode)
   * ``--container`` / ``-c``: Enable container mode with simplified directory structure
   * ``--working_dir``: Set the working directory
-  
+  * ``--password`` / ``-p``: Set keystore password (sets ``KEYSTORE_PASSWORD`` environment variable)
+
   **Note**: The ``--run`` argument is optional. If no specific mode (``--init``, ``--add_secret``, or ``--service``) is specified, the application runs in normal mode by default.
 
 ProcessManager

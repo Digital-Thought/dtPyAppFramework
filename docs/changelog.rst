@@ -25,6 +25,7 @@ Added
 - New sample application ``daemon_app.py`` demonstrating long-running application pattern
 - Updated documentation for application lifecycle patterns in ``application.rst``
 - Updated documentation for container mode paths in ``paths-resources.rst``
+- **Command-line keystore password**: New ``--password`` / ``-p`` argument to set ``KEYSTORE_PASSWORD`` environment variable from command line, providing an alternative to setting the environment variable directly
 
 Changed
 -------

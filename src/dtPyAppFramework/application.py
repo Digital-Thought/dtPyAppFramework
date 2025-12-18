@@ -110,6 +110,9 @@ class AbstractApp(object):
         arg_parser.add_argument('--container', '-c', action='store_true', required=False, help='Enable container mode with simplified directory structure')
         arg_parser.add_argument('--single_folder', action='store_true', required=False, help='Keeps all Directories in a single folder')
         arg_parser.add_argument('--working_dir', action='store', type=str, required=False, help="Sets the Working Directory")
+        arg_parser.add_argument('--password', '-p', action='store', type=str, required=False,
+                                help="Keystore password. Sets KEYSTORE_PASSWORD environment variable. "
+                                     "Required for container deployments with shared keystores.")
 
         self.define_args(arg_parser)
         # Check specific states and add corresponding arguments
@@ -125,12 +128,13 @@ class AbstractApp(object):
         if opts.container or os.environ.get('CONTAINER_MODE', '').lower() in ('true', '1', 'yes'):
             os.environ['CONTAINER_MODE'] = "True"
 
+        # Set keystore password from command line argument (if not already set via environment)
+        if opts.password:
+            os.environ['KEYSTORE_PASSWORD'] = opts.password
+            logging.debug("KEYSTORE_PASSWORD set from --password argument")
+
         if opts.service:
             arg_parser.add_argument('--install', action='store_true')
-
-        if opts.init:
-            arg_parser.add_argument('--password', action='store', type=str, required=False,
-                                    help="Secrets Store password")
         elif opts.add_secret:
             arg_parser.add_argument('--name', action='store', type=str, required=False, help="Secret Name")
 
