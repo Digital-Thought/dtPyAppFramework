@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.1.2] - 2026-01-31
+
+### Fixed
+
+- Fix 11 test failures on Linux CI caused by incorrect mock paths and platform assumptions
+  - Use os.path.join for expected Windows paths so tests pass on Linux runners
+  - Skip Windows service test on non-Windows platforms (call_service unavailable)
+  - Mock run_cmd at the correct import path (dtPyAppFramework.security.crypto.run_cmd)
+  - Correct MAC address fingerprint test to match inverted collection logic
+  - Fix empty custom salt assertion (b"" is falsy, falls back to default salt)
+  - Match actual error message in file permissions validation test
+- Fix flaky constant-time comparison test by averaging over 1000 iterations and
+  widening timing tolerance to 3x for shared CI runners
+
 ## [4.1.1] - 2026-01-31
 
 ### Added

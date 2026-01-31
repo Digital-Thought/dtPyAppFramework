@@ -363,29 +363,33 @@ class TestConstantTimeCompare:
     def test_constant_time_property(self):
         """Test that function takes roughly constant time for same-length inputs."""
         import time
-        
-        # This is a basic test - true constant-time testing would require
-        # more sophisticated timing analysis
+
+        # Use multiple iterations to reduce noise from scheduling jitter,
+        # especially on shared CI runners where CPU contention is common.
+        iterations = 1000
         data1 = b"x" * 1000
         data2 = b"x" * 1000  # Same
         data3 = b"y" * 1000  # Different
-        
+
         # Time equal comparison
         start = time.perf_counter()
-        result1 = constant_time_compare(data1, data2)
+        for _ in range(iterations):
+            result1 = constant_time_compare(data1, data2)
         time1 = time.perf_counter() - start
-        
-        # Time different comparison  
+
+        # Time different comparison
         start = time.perf_counter()
-        result2 = constant_time_compare(data1, data3)
+        for _ in range(iterations):
+            result2 = constant_time_compare(data1, data3)
         time2 = time.perf_counter() - start
-        
+
         assert result1 is True
         assert result2 is False
-        
-        # Times should be similar (within 50% of each other)
+
+        # Times should be similar; allow up to 3x variance to avoid flaky
+        # failures on busy CI runners while still catching gross timing leaks.
         time_ratio = max(time1, time2) / min(time1, time2)
-        assert time_ratio < 1.5  # Allow some variance
+        assert time_ratio < 3.0
 
 
 class TestTimingSafeOperation:

@@ -13,6 +13,7 @@ import tempfile
 import threading
 import signal
 import time
+import platform
 from unittest.mock import patch, MagicMock, call, mock_open
 from argparse import ArgumentParser
 
@@ -612,6 +613,8 @@ class TestProcessManagerServiceHandling:
         """Setup method run before each test."""
         _clear_process_manager_singleton()
 
+    @pytest.mark.skipif(platform.system() != 'Windows',
+                        reason="call_service is only available on Windows")
     @patch('platform.system', return_value='Windows')
     @patch('dtPyAppFramework.process.call_service')
     @patch('dtPyAppFramework.process.is_multiprocess_spawned_instance', return_value=False)

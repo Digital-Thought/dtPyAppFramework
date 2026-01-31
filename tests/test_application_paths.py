@@ -121,17 +121,19 @@ class TestApplicationPathsWindows:
         """Test Windows path generation in production mode."""
         with patch('platform.system', return_value='Windows'):
             app_paths = ApplicationPaths("TestApp", forced_os="Windows", auto_create=False)
-            
-            expected_logging = 'C:\\Users\\TestUser\\AppData\\Local\\TestApp\\logs'
-            expected_app_data = 'C:\\ProgramData\\TestApp'
-            expected_usr_data = 'C:\\Users\\TestUser\\AppData\\Roaming\\TestApp'
-            expected_temp = 'C:\\Users\\TestUser\\AppData\\Local\\Temp\\TestApp'
-            
+
+            # Use os.path.join for expected values because the source does the same,
+            # and os.path.join uses platform-native separators (/ on Linux, \ on Windows).
+            expected_logging = os.path.join('C:\\Users\\TestUser\\AppData\\Local', 'TestApp', 'logs')
+            expected_app_data = os.path.join('C:\\ProgramData', 'TestApp')
+            expected_usr_data = os.path.join('C:\\Users\\TestUser\\AppData\\Roaming', 'TestApp')
+            expected_temp = os.path.join('C:\\Users\\TestUser\\AppData\\Local\\Temp', 'TestApp')
+
             assert app_paths.logging_root_path == expected_logging
             assert app_paths.app_data_root_path == expected_app_data
             assert app_paths.usr_data_root_path == expected_usr_data
             assert app_paths.tmp_root_path == expected_temp
-            
+
             # Verify environment variables are set
             assert os.environ['dt_LOGGING_PATH'] == expected_logging
             assert os.environ['dt_APP_DATA'] == expected_app_data

@@ -74,7 +74,7 @@ class TestSecureFileManagerValidation:
             # Should fail validation
             with pytest.raises(FileSystemSecurityError) as exc_info:
                 SecureFileManager.validate_file_permissions(temp_path)
-            assert "insecure permissions" in str(exc_info.value)
+            assert "too permissive" in str(exc_info.value)
             
         finally:
             os.unlink(temp_path)
