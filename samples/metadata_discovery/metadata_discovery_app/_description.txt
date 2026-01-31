@@ -1,0 +1,1 @@
+Demonstrates auto-discovery of application metadata from text files

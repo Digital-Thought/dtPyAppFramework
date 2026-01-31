@@ -1,0 +1,10 @@
+pytest~=8.3.3
+pytest-mock
+pytest-watch
+pytest-cov
+black
+isort
+flake8
+mypy
+pip-audit
+bandit

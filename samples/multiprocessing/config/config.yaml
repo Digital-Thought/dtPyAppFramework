@@ -1,0 +1,24 @@
+# Configuration file for multiprocessing sample application
+
+# Application settings
+app:
+  name: "multiprocessing_app"
+  version: "1.0"
+  description: "Sample multiprocessing application"
+
+# Logging configuration
+logging:
+  level: "INFO"
+  console_colors: true
+  rotation: true
+
+# Multi-processing settings
+multiprocessing:
+  max_workers: 2
+  task_timeout: 30
+
+# Secrets configuration (local storage for demo)
+secrets:
+  local:
+    store_path: "secrets"
+    encryption: true

@@ -1,0 +1,35 @@
+/.claude/
+/claude.md
+/FOR-ACTIONING.md
+/.venv/
+/.idea/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+*.egg
+dist/
+build/
+
+# Testing
+.pytest_cache/
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+
+# Type checking
+.mypy_cache/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs and data (local dev)
+/data/
+/logs/
+/nul
+samples/**/data/
+samples/**/logs/

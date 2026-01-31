@@ -1,0 +1,282 @@
+# Kubernetes Deployment for Container Mode Sample
+# This demonstrates how to deploy dtPyAppFramework applications to Kubernetes
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: dtpyapp-sample
+  labels:
+    app: dtpyapp-container-sample
+
+---
+# ConfigMap for application configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: dtpyapp-sample
+  labels:
+    app: dtpyapp-container-sample
+data:
+  config.yaml: |
+    app:
+      name: "Kubernetes Container Sample"
+      version: "1.0.0"
+      debug: false
+      environment: "kubernetes"
+    
+    database:
+      host: "ENV/DB_HOST"
+      port: 5432
+      name: "ENV/DB_NAME"
+      
+    api:
+      base_url: "https://api.example.com"
+      timeout: 30
+      key: "SEC/api_key"
+    
+    logging:
+      level: "INFO"
+      console: true
+      file: true
+    
+    container:
+      health_check_interval: 30
+      graceful_shutdown_timeout: 10
+
+---
+# Secret for sensitive data
+apiVersion: v1
+kind: Secret
+metadata:
+  name: app-secrets
+  namespace: dtpyapp-sample
+  labels:
+    app: dtpyapp-container-sample
+type: Opaque
+data:
+  # Base64 encoded values (use: echo -n 'value' | base64)
+  api-key: ZGVtby1hcGkta2V5LTEyMw==  # demo-api-key-123
+  db-password: YXBwcGFzcw==  # apppass
+
+---
+# PersistentVolumeClaim for data storage
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: app-data-pvc
+  namespace: dtpyapp-sample
+  labels:
+    app: dtpyapp-container-sample
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+    limits:
+      storage: 5Gi
+  storageClassName: standard  # Adjust based on your cluster
+
+---
+# Service for internal communication
+apiVersion: v1
+kind: Service
+metadata:
+  name: app-service
+  namespace: dtpyapp-sample
+  labels:
+    app: dtpyapp-container-sample
+spec:
+  selector:
+    app: dtpyapp-container-sample
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+      protocol: TCP
+  type: ClusterIP
+
+---
+# Main application deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dtpyapp-container-sample
+  namespace: dtpyapp-sample
+  labels:
+    app: dtpyapp-container-sample
+    version: "1.0.0"
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: dtpyapp-container-sample
+  template:
+    metadata:
+      labels:
+        app: dtpyapp-container-sample
+        version: "1.0.0"
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
+    spec:
+      automountServiceAccountToken: false
+
+      # Security context
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      
+      # Container specification
+      containers:
+      - name: app
+        image: dtpyapp-container-sample:1.0.0
+        imagePullPolicy: IfNotPresent
+        
+        # Environment variables
+        env:
+        - name: CONTAINER_MODE
+          value: "true"
+        - name: DB_HOST
+          value: "postgres-service"
+        - name: DB_NAME
+          value: "sampledb"
+        - name: API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: api-key
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: db-password
+        
+        # Resource limits and requests
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+            ephemeral-storage: "256Mi"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+            ephemeral-storage: "1Gi"
+        
+        # Volume mounts
+        volumeMounts:
+        - name: config-volume
+          mountPath: /app/config
+          readOnly: true
+        - name: data-volume
+          mountPath: /app/data
+        - name: logs-volume
+          mountPath: /app/logs
+        
+        # Health checks
+        livenessProbe:
+          exec:
+            command:
+            - python
+            - sample/container_app.py
+            - --task
+            - config
+            - --container
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        
+        readinessProbe:
+          exec:
+            command:
+            - python
+            - sample/container_app.py
+            - --task
+            - config
+            - --container
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        
+        # Graceful shutdown
+        lifecycle:
+          preStop:
+            exec:
+              command:
+              - /bin/sh
+              - -c
+              - sleep 15
+      
+      # Volumes
+      volumes:
+      - name: config-volume
+        configMap:
+          name: app-config
+      - name: data-volume
+        persistentVolumeClaim:
+          claimName: app-data-pvc
+      - name: logs-volume
+        emptyDir: {}
+      
+      # Pod restart policy
+      restartPolicy: Always
+      
+      # DNS configuration
+      dnsPolicy: ClusterFirst
+
+---
+# HorizontalPodAutoscaler for automatic scaling
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: app-hpa
+  namespace: dtpyapp-sample
+  labels:
+    app: dtpyapp-container-sample
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: dtpyapp-container-sample
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+
+---
+# NetworkPolicy for security
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: app-network-policy
+  namespace: dtpyapp-sample
+  labels:
+    app: dtpyapp-container-sample
+spec:
+  podSelector:
+    matchLabels:
+      app: dtpyapp-container-sample
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from: []  # Allow all ingress (adjust based on requirements)
+  egress:
+  - {}  # Allow all egress (adjust based on requirements)

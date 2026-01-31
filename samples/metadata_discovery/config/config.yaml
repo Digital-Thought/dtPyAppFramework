@@ -1,0 +1,6 @@
+app:
+  mode: metadata_discovery_demo
+
+logging:
+  level: DEBUG
+  log_to_console: False
