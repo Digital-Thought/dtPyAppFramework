@@ -75,6 +75,8 @@ def get_logging_config(logging_source=None):
 
 
 def purge_old_logs(log_path, rotation_backup_count):
+    if not os.path.isdir(log_path):
+        return
     timestamped_dirs = []
     for entry in os.scandir(log_path):
         if entry.is_dir():
@@ -123,10 +125,23 @@ def initialise_logging(spawned_process=False, job_id=None, worker_id=None, paren
         if spawned_process:
             log_folder = f'{parent_log_path}/job-{job_id}/{worker_id}'
         else:
-            purge_old_logs(app_paths.logging_root_path, Settings().get("logging.rotation_backup_count", 5))
+            if os.path.isdir(app_paths.logging_root_path):
+                purge_old_logs(app_paths.logging_root_path, Settings().get("logging.rotation_backup_count", 5))
+            else:
+                logging.warning(
+                    f'Logging directory "{app_paths.logging_root_path}" does not exist; '
+                    f'skipping log purge.'
+                )
             log_folder = f'{app_paths.logging_root_path}/{format(datetime.now().strftime("%Y%m%d_%H%M%S"))}'
 
-        os.makedirs(log_folder, exist_ok=True)
+        try:
+            os.makedirs(log_folder, exist_ok=True)
+        except OSError as ex:
+            logging.warning(
+                f'Could not create log folder "{log_folder}": {ex}. '
+                f'File logging will be unavailable.'
+            )
+            return None
         # Set file names based on log levels
         logging_config['handlers']['logfile_ALL']['filename'] = '{}/info-{}.log'.format(log_folder,
                                                                                         app_paths.app_short_name)

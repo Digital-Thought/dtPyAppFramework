@@ -36,6 +36,9 @@ class ApplicationPaths(object):
         self.forced_dev_mode = forced_dev_mode
         self.worker_id = worker_id
 
+        # Track which paths were successfully created
+        self.path_creation_status = {}
+
         # Set development mode environment variable
         if self.forced_dev_mode:
             os.environ['DEV_MODE'] = "True"
@@ -58,24 +61,65 @@ class ApplicationPaths(object):
         logging.info(f'User Data Root Path: {self.usr_data_root_path}')
         logging.info(f'Temp Root Path: {self.tmp_root_path}')
 
+    def _safe_makedirs(self, path_name, path_value):
+        """
+        Attempt to create a directory, logging a warning on failure.
+
+        Args:
+            path_name (str): Descriptive name of the path (for status tracking).
+            path_value (str): The actual filesystem path to create.
+
+        Returns:
+            bool: True if the directory exists after this call, False otherwise.
+        """
+        try:
+            os.makedirs(path_value, exist_ok=True)
+            self.path_creation_status[path_name] = True
+            return True
+        except OSError as ex:
+            logging.warning(
+                f'Could not create {path_name} directory "{path_value}": {ex}. '
+                f'Functionality depending on this path may be unavailable.'
+            )
+            self.path_creation_status[path_name] = False
+            return False
+
+    def is_path_available(self, path_name):
+        """
+        Check whether a named path was successfully created.
+
+        Args:
+            path_name (str): One of 'tmp', 'logging', 'usr_data', 'app_data'.
+
+        Returns:
+            bool: True if the path was created successfully, False if creation
+                  failed, None if auto_create was not enabled.
+        """
+        return self.path_creation_status.get(path_name)
+
     def __init_directories(self):
         """
-        Initialize directories based on configuration.
+        Initialise directories based on configuration.
+
+        Directory creation failures are logged as warnings rather than
+        raising exceptions, allowing the application to continue with
+        reduced functionality when system-level paths are not writable.
         """
         # Clean temporary directory if configured
         if self.clean_temp and os.path.exists(self.tmp_root_path):
-            shutil.rmtree(self.tmp_root_path, ignore_errors=False)
+            try:
+                shutil.rmtree(self.tmp_root_path, ignore_errors=False)
+            except OSError as ex:
+                logging.warning(
+                    f'Could not clean temporary directory "{self.tmp_root_path}": {ex}'
+                )
 
         # Automatically create directories if configured
         if self.auto_create:
-            os.makedirs(self.tmp_root_path, exist_ok=True)
-            os.makedirs(self.logging_root_path, exist_ok=True)
-            os.makedirs(self.usr_data_root_path, exist_ok=True)
-
-            try:
-                os.makedirs(self.app_data_root_path, exist_ok=True)
-            except Exception as ex:
-                print(f'Skipping creation of application data path {self.app_data_root_path}. {ex}')
+            self._safe_makedirs('tmp', self.tmp_root_path)
+            self._safe_makedirs('logging', self.logging_root_path)
+            self._safe_makedirs('usr_data', self.usr_data_root_path)
+            self._safe_makedirs('app_data', self.app_data_root_path)
 
     def __os(self):
         """

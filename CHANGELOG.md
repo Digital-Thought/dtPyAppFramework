@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.2.0] - 2026-02-01
+
+### Added
+
+- Graceful directory creation failure handling in ApplicationPaths
+  - New `_safe_makedirs()` helper wraps all `os.makedirs` calls with `OSError` handling
+  - New `path_creation_status` dict tracks which paths were successfully created
+  - New `is_path_available(path_name)` convenience method for downstream consumers
+  - Applications continue with reduced functionality when system-level paths
+    (e.g. `C:\ProgramData`, `/var/log`) are not writable, instead of crashing
+
+### Changed
+
+- ApplicationPaths now logs `logging.warning()` on directory creation failure
+  instead of crashing (tmp, logging, usr_data) or printing to stdout (app_data)
+- `purge_old_logs()` returns early when log directory does not exist
+- `initialise_logging()` handles missing log directories gracefully and returns
+  `None` when file logging is unavailable
+- `SettingsReader` checks directory existence before scheduling watchdog observer,
+  preventing `OSError` when config directories are missing
+- `LocalSecretStoresManager` uses `logging.warning()` instead of `print()` when
+  skipping the APP Local Secret Store
+- `shutil.rmtree` for temp directory cleanup is now wrapped in try/except
+
 ## [4.1.2] - 2026-01-31
 
 ### Fixed

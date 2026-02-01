@@ -36,7 +36,7 @@ class LocalSecretStoresManager:
                                                 application_settings=self.application_settings,
                                                 app_short_name=self.application_paths.app_short_name))
         except Exception as ex:
-            print(f'Skipping APP Local Secret Store. {ex}')
+            logging.warning(f'Skipping APP Local Secret Store: {ex}')
 
         for store in self.stores:
             self.store_names.append(store.store_name)

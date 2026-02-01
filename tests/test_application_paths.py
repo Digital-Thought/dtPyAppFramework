@@ -449,24 +449,23 @@ class TestApplicationPathsErrorHandling:
         """Test handling of exceptions during app data directory creation."""
         with patch('os.getcwd', return_value='/tmp/test'):
             with patch('os.makedirs') as mock_makedirs:
-                with patch('builtins.print') as mock_print:
-                    # The app_data path in dev mode ends with data/app (or data\app on Windows)
-                    app_data_segment = os.path.join('data', 'app')
+                # The app_data path in dev mode ends with data/app (or data\app on Windows)
+                app_data_segment = os.path.join('data', 'app')
 
-                    def makedirs_side_effect(path, exist_ok=False):
-                        if app_data_segment in path:
-                            raise PermissionError("Permission denied")
-                        return None
+                def makedirs_side_effect(path, exist_ok=False):
+                    if app_data_segment in path:
+                        raise PermissionError("Permission denied")
+                    return None
 
-                    mock_makedirs.side_effect = makedirs_side_effect
+                mock_makedirs.side_effect = makedirs_side_effect
 
+                with patch('logging.warning') as mock_warning:
                     _app_paths = ApplicationPaths("TestApp", forced_dev_mode=True, auto_create=True)
 
-                    # Verify exception was handled and message was printed
-                    mock_print.assert_called()
-                    print_args = mock_print.call_args[0][0]
-                    assert "Skipping creation of application data path" in print_args
-                    assert "Permission denied" in print_args
+                    # Verify exception was handled and warning was logged
+                    warning_messages = [str(call.args[0]) for call in mock_warning.call_args_list]
+                    assert any("app_data" in msg and "Permission denied" in msg
+                               for msg in warning_messages)
     
     def test_unknown_os_handling(self):
         """Test behavior with unknown operating system uses fallback paths."""
@@ -517,6 +516,88 @@ class TestApplicationPathsSingleton:
         else:
             # Key-based singleton behavior
             assert app_paths1.app_short_name != app_paths2.app_short_name
+
+
+class TestApplicationPathsGracefulFailure:
+    """Test that directory creation failures are handled gracefully."""
+
+    def setup_method(self):
+        _clear_singleton_cache()
+        _clean_env()
+
+    def teardown_method(self):
+        _clear_singleton_cache()
+        _clean_env()
+
+    def test_makedirs_permission_error_does_not_propagate(self):
+        """Test that PermissionError during makedirs does not crash the application."""
+        with patch('os.makedirs', side_effect=PermissionError("Permission denied")):
+            # Should NOT raise -- all failures are logged as warnings
+            app_paths = ApplicationPaths("TestApp", forced_dev_mode=True, auto_create=True)
+
+            # Path strings must still be set (not None)
+            assert app_paths.logging_root_path is not None
+            assert app_paths.app_data_root_path is not None
+            assert app_paths.usr_data_root_path is not None
+            assert app_paths.tmp_root_path is not None
+
+    def test_path_creation_status_reflects_failures(self):
+        """Test that path_creation_status records which paths failed."""
+        call_count = 0
+
+        def selective_makedirs(path, exist_ok=False):
+            """Fail only for paths containing 'app' (app_data)."""
+            nonlocal call_count
+            call_count += 1
+            if os.path.join('data', 'app') in path:
+                raise PermissionError("Permission denied")
+
+        with patch('os.makedirs', side_effect=selective_makedirs):
+            app_paths = ApplicationPaths("TestApp", forced_dev_mode=True, auto_create=True)
+
+            assert app_paths.path_creation_status['app_data'] is False
+            assert app_paths.path_creation_status['tmp'] is True
+            assert app_paths.path_creation_status['logging'] is True
+            assert app_paths.path_creation_status['usr_data'] is True
+
+    def test_is_path_available_returns_correct_values(self):
+        """Test is_path_available convenience method."""
+        with patch('os.makedirs', side_effect=PermissionError("Permission denied")):
+            app_paths = ApplicationPaths("TestApp", forced_dev_mode=True, auto_create=True)
+
+            assert app_paths.is_path_available('tmp') is False
+            assert app_paths.is_path_available('logging') is False
+            assert app_paths.is_path_available('usr_data') is False
+            assert app_paths.is_path_available('app_data') is False
+
+    def test_is_path_available_none_when_auto_create_disabled(self):
+        """Test is_path_available returns None when auto_create was not enabled."""
+        app_paths = ApplicationPaths("TestApp", forced_dev_mode=True, auto_create=False)
+
+        assert app_paths.is_path_available('tmp') is None
+        assert app_paths.is_path_available('logging') is None
+        assert app_paths.is_path_available('app_data') is None
+
+    def test_all_paths_succeed_when_writable(self):
+        """Test that all paths are marked as available when creation succeeds."""
+        with patch('os.getcwd', return_value=tempfile.mkdtemp()):
+            app_paths = ApplicationPaths("TestApp", forced_dev_mode=True, auto_create=True)
+
+            assert app_paths.is_path_available('tmp') is True
+            assert app_paths.is_path_available('logging') is True
+            assert app_paths.is_path_available('usr_data') is True
+            assert app_paths.is_path_available('app_data') is True
+
+    def test_shutil_rmtree_failure_does_not_propagate(self):
+        """Test that failure to clean temp directory does not crash."""
+        with patch('os.path.exists', return_value=True):
+            with patch('shutil.rmtree', side_effect=PermissionError("Permission denied")):
+                with patch('os.makedirs'):
+                    # Should NOT raise
+                    app_paths = ApplicationPaths(
+                        "TestApp", forced_dev_mode=True, auto_create=True, clean_temp=True
+                    )
+                    assert app_paths.tmp_root_path is not None
 
 
 if __name__ == '__main__':

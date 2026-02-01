@@ -89,8 +89,8 @@ class SettingsReader(dict):
         self.observer = Observer()
         event_handler = ConfigFileWatcher(change_action=self.load_yaml_file, delete_action=super().clear,
                                           watch_file=self.CONFIG_FILE, watch_folder=path)
-        self.observer.schedule(event_handler, path, recursive=False)
-        if os.path.exists(path):
+        if os.path.isdir(path):
+            self.observer.schedule(event_handler, path, recursive=False)
             self.observer.start()
 
         super().__init__()
