@@ -1,3 +1,5 @@
+import os
+
 from ...paths import ApplicationPaths
 from .local_secret_store import LocalSecretStore
 import logging
@@ -29,14 +31,16 @@ class LocalSecretStoresManager:
                                             application_settings=self.application_settings,
                                             app_short_name=self.application_paths.app_short_name))
 
-        try:
-            self.stores.append(LocalSecretStore(store_name="App_Local_Store",
-                                                store_priority=1,
-                                                root_store_path=self.application_paths.app_data_root_path,
-                                                application_settings=self.application_settings,
-                                                app_short_name=self.application_paths.app_short_name))
-        except Exception as ex:
-            logging.warning(f'Skipping APP Local Secret Store: {ex}')
+        # Only create the all-users keystore if explicitly enabled via environment variable
+        if os.environ.get('ALL_USER_KS', '').upper() == 'TRUE':
+            try:
+                self.stores.append(LocalSecretStore(store_name="App_Local_Store",
+                                                    store_priority=1,
+                                                    root_store_path=self.application_paths.app_data_root_path,
+                                                    application_settings=self.application_settings,
+                                                    app_short_name=self.application_paths.app_short_name))
+            except Exception as ex:
+                logging.warning(f'Skipping APP Local Secret Store: {ex}')
 
         for store in self.stores:
             self.store_names.append(store.store_name)
