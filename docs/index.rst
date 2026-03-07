@@ -75,6 +75,7 @@ Documentation Sections
    components/logging
    components/multiprocessing
    components/paths-resources
+   components/file-paths-reference
    components/cloud-integration
    components/decorators
 
