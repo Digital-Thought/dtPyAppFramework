@@ -71,6 +71,7 @@ Documentation Sections
 
    components/application
    components/configuration
+   components/config-reference
    components/secrets-management
    components/logging
    components/multiprocessing
