@@ -547,6 +547,9 @@ Environment Variables Affecting Configuration
    * - ``DEV_MODE``
      - ``FALSE``
      - Use development paths (relative to working directory)
+   * - ``USE_SYSTEM_TEMP``
+     - ``FALSE``
+     - Use native OS temp directory without app-specific subdirectory
    * - ``ALL_USER_KS``
      - ``FALSE``
      - Create all-users keystore (App_Local_Store)

@@ -106,7 +106,9 @@ class ApplicationPaths(object):
         reduced functionality when system-level paths are not writable.
         """
         # Clean temporary directory if configured
-        if self.clean_temp and os.path.exists(self.tmp_root_path):
+        # Skip cleaning if using native system temp path to avoid deleting other apps' files
+        using_system_temp = os.environ.get("USE_SYSTEM_TEMP", "").upper() == "TRUE"
+        if self.clean_temp and os.path.exists(self.tmp_root_path) and not using_system_temp:
             try:
                 shutil.rmtree(self.tmp_root_path, ignore_errors=False)
             except OSError as ex:
@@ -116,7 +118,12 @@ class ApplicationPaths(object):
 
         # Automatically create directories if configured
         if self.auto_create:
-            self._safe_makedirs('tmp', self.tmp_root_path)
+            # Skip creating temp directory when using native system temp (it already exists)
+            if not using_system_temp:
+                self._safe_makedirs('tmp', self.tmp_root_path)
+            else:
+                # Mark as available since system temp always exists
+                self.path_creation_status['tmp'] = True
             self._safe_makedirs('logging', self.logging_root_path)
             self._safe_makedirs('usr_data', self.usr_data_root_path)
             self._safe_makedirs('app_data', self.app_data_root_path)
@@ -276,6 +283,9 @@ class ApplicationPaths(object):
         """
         Initialise the temporary root path based on the operating system.
 
+        When USE_SYSTEM_TEMP=TRUE, uses the native OS temp directory directly
+        without any app-specific subdirectory.
+
         In container mode, temp directories are organised under a unique folder
         combining the container name and process ID to prevent collisions between
         multiple container instances sharing the same temp volume. The structure
@@ -285,7 +295,11 @@ class ApplicationPaths(object):
             str: Temporary root path.
         """
         _path = None
-        if os.environ.get("CONTAINER_MODE", None):
+
+        # Check for native system temp path preference
+        if os.environ.get("USE_SYSTEM_TEMP", "").upper() == "TRUE":
+            _path = tempfile.gettempdir()
+        elif os.environ.get("CONTAINER_MODE", None):
             container_id = self._get_container_identifier()
             process_id = os.getpid()
             _path = os.path.join(os.getcwd(), 'temp', f'{container_id}_{process_id}')

@@ -180,6 +180,41 @@ All paths collapse to the current working directory:
    * - Keystore
      - ``{cwd}/data``
 
+Native System Temp Mode
+=======================
+
+When ``USE_SYSTEM_TEMP=TRUE``, the framework uses the native operating system
+temporary directory directly, without creating an app-specific subdirectory.
+
+Native System Temp Paths
+------------------------
+
+.. list-table::
+   :header-rows: 1
+   :widths: 25 75
+
+   * - Platform
+     - Location
+   * - Windows
+     - ``C:\Users\{username}\AppData\Local\Temp`` (or ``%TEMP%``)
+   * - macOS
+     - ``/var/folders/.../T/`` (or ``$TMPDIR``)
+   * - Linux
+     - ``/tmp``
+
+**When to Use:**
+
+- When you want the OS to manage temp file cleanup automatically
+- When your application creates few temporary files
+- When you don't need isolation between application instances
+- For compatibility with system temp cleanup policies
+
+**Considerations:**
+
+- Temp files are not isolated from other applications
+- The ``clean_temp`` option will attempt to clean the entire system temp directory (not recommended)
+- Spawned worker instances still append their worker ID as a subdirectory
+
 Container Mode
 ==============
 
@@ -232,6 +267,9 @@ Mode Selection
    * - ``CONTAINER_MODE``
      - ``TRUE``
      - Enables container mode; paths designed for containerised environments
+   * - ``USE_SYSTEM_TEMP``
+     - ``TRUE``
+     - Uses native OS temp directory directly without app-specific subdirectory
 
 Container Configuration
 -----------------------
@@ -428,3 +466,14 @@ Container Mode
       User Data: /app/data (or $CONTAINER_DATA_PATH)
       Temp:      /app/data/tmp/{container_id}
       Logs:      /app/data/logs/{container_id}
+
+Native System Temp
+------------------
+
+::
+
+    USE_SYSTEM_TEMP=TRUE:
+      Temp:      Native OS temp directory (no app subdirectory)
+               - Windows: %TEMP%
+               - macOS:   $TMPDIR
+               - Linux:   /tmp

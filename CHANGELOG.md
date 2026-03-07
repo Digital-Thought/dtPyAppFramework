@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.4.0] - 2026-03-07
+
+### Added
+
+- Native system temp path option via `USE_SYSTEM_TEMP=TRUE` environment variable
+  - When enabled, uses the OS temp directory directly without app-specific subdirectory
+  - Temp directory cleaning is automatically skipped to avoid deleting other apps' files
+  - Useful when relying on OS-level temp cleanup mechanisms
+
+### Documentation
+
+- Add comprehensive file paths reference documentation (`file-paths-reference.rst`)
+- Add comprehensive configuration reference documentation (`config-reference.rst`)
+
 ## [4.3.0] - 2026-02-16
 
 ### Changed
