@@ -14,6 +14,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Temp directory cleaning is automatically skipped to avoid deleting other apps' files
   - Useful when relying on OS-level temp cleanup mechanisms
 
+- Option to disable local secrets store via `LOCAL_SECRETS_STORE=FALSE` environment variable
+  - When disabled, no keystore files are created or accessed
+  - Reading secrets returns `None` (or the provided default value)
+  - Writing secrets raises `LocalSecretsDisabledException`
+  - Useful for containerised environments using external secret sources (Kubernetes secrets, etc.)
+  - New `LocalSecretsDisabledException` exception class for handling write attempts when disabled
+
+- Option to disable config file reading via `CONFIG_FILES_ENABLED=FALSE` environment variable
+  - When disabled, no config.yaml files are loaded or watched
+  - `settings.get()` returns the default value (or `None`)
+  - Useful for containerised environments with external configuration management
+
 ### Documentation
 
 - Add comprehensive file paths reference documentation (`file-paths-reference.rst`)

@@ -20,6 +20,13 @@ class Settings(dict):
         settings_readers (list): List of settings readers.
         persistent_settings_stores (list): List of persistent settings stores.
         secret_manager (SecretsManager): Manager for handling secrets.
+        config_files_enabled (bool): Whether config file reading is enabled.
+
+    The configuration file reading can be disabled by setting the environment
+    variable CONFIG_FILES_ENABLED=FALSE. When disabled:
+    - No config.yaml files are read or watched
+    - settings.get() returns the default value (or None)
+    - Configuration must come from environment variables or other sources
     """
 
     def __init__(self, application_paths=None, app_short_name=None) -> None:
@@ -40,6 +47,9 @@ class Settings(dict):
         self.secret_manager: Optional[SecretsManager] = None
         self.cloud_session_manager = None
 
+        # Check if config file reading is enabled (default: TRUE)
+        self.config_files_enabled = os.environ.get('CONFIG_FILES_ENABLED', 'TRUE').upper() != 'FALSE'
+
         super().__init__()
 
     def close(self):
@@ -48,17 +58,23 @@ class Settings(dict):
     def init_settings_readers(self):
         """
         Initialize settings readers.
-        """
-        if os.environ.get("CONTAINER_MODE", None):
-            # Container mode: single config directory only
-            self.settings_readers.append(SettingsReader(os.path.join(os.getcwd(), "config"), 300))
-        else:
-            # Standard layered configuration
-            self.settings_readers.append(SettingsReader(os.path.join(os.getcwd(), "config"), 300))
-            self.settings_readers.append(SettingsReader(self.application_paths.app_data_root_path, 200))
-            self.settings_readers.append(SettingsReader(self.application_paths.usr_data_root_path, 100))
 
-        self.settings_readers.sort(key=lambda x: x.priority)
+        If CONFIG_FILES_ENABLED=FALSE, no settings readers are loaded and
+        configuration must come from environment variables or other sources.
+        """
+        if self.config_files_enabled:
+            if os.environ.get("CONTAINER_MODE", None):
+                # Container mode: single config directory only
+                self.settings_readers.append(SettingsReader(os.path.join(os.getcwd(), "config"), 300))
+            else:
+                # Standard layered configuration
+                self.settings_readers.append(SettingsReader(os.path.join(os.getcwd(), "config"), 300))
+                self.settings_readers.append(SettingsReader(self.application_paths.app_data_root_path, 200))
+                self.settings_readers.append(SettingsReader(self.application_paths.usr_data_root_path, 100))
+
+            self.settings_readers.sort(key=lambda x: x.priority)
+        else:
+            logging.info('Configuration file reading is disabled (CONFIG_FILES_ENABLED=FALSE)')
 
         from ..cloud import CloudSessionManager
         self.cloud_session_manager = CloudSessionManager()
@@ -86,6 +102,16 @@ class Settings(dict):
 
     def get_raw_settings(self):
         raw_settings = {}
+
+        # Return empty/disabled state if config files are disabled
+        if not self.config_files_enabled:
+            for key in ['app', 'all_user', 'current_user']:
+                raw_settings[key] = {
+                    'read_only': True,
+                    'raw_data': '# Configuration files disabled (CONFIG_FILES_ENABLED=FALSE)',
+                    'disabled': True
+                }
+            return raw_settings
 
         if os.environ.get("CONTAINER_MODE", None):
             # Container mode: only single config file

@@ -112,6 +112,37 @@ Local Secret Stores
 
 Local secret stores provide encrypted storage on the local filesystem using the cryptography library.
 
+**Disabling Local Secret Stores:**
+
+The local secrets store can be completely disabled by setting the environment variable
+``LOCAL_SECRETS_STORE=FALSE``. When disabled:
+
+- No keystore files are created or accessed
+- Reading secrets returns ``None`` (or the default value)
+- Writing secrets raises ``LocalSecretsDisabledException``
+- The application relies entirely on cloud-based secret stores
+
+This is useful for:
+
+- Containerised environments where secrets come from external sources (Kubernetes secrets, etc.)
+- Deployments that exclusively use cloud-based secret stores
+- Testing environments where local secrets are not needed
+
+.. code-block:: bash
+
+    # Disable local secrets store
+    export LOCAL_SECRETS_STORE=FALSE
+    python myapp.py
+
+.. code-block:: python
+
+    from dtPyAppFramework.settings.secrets import LocalSecretsDisabledException
+
+    try:
+        settings.secret_manager.set_secret('key', 'value')
+    except LocalSecretsDisabledException:
+        logging.warning("Local secrets store is disabled")
+
 **LocalSecretStore**
 
 .. autoclass:: dtPyAppFramework.settings.secrets.local_secret_store.LocalSecretStore

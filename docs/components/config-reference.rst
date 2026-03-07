@@ -68,6 +68,28 @@ When ``CONTAINER_MODE=TRUE``, only a single configuration layer is used:
 
 - ``./config/config.yaml`` (working directory)
 
+Disabling Configuration Files
+-----------------------------
+
+When ``CONFIG_FILES_ENABLED=FALSE``, no configuration files are read:
+
+- No ``config.yaml`` files are loaded or watched
+- ``settings.get()`` returns the default value (or ``None``)
+- Configuration must come from environment variables or other sources
+- Useful for containerised environments with external configuration management
+
+.. code-block:: bash
+
+    # Disable config file reading
+    export CONFIG_FILES_ENABLED=FALSE
+    python myapp.py
+
+When disabled, you can still use:
+
+- Environment variables directly in your code
+- Cloud-based secret stores for sensitive configuration
+- Command-line arguments for runtime configuration
+
 Configuration Sections
 ======================
 
@@ -550,6 +572,12 @@ Environment Variables Affecting Configuration
    * - ``USE_SYSTEM_TEMP``
      - ``FALSE``
      - Use native OS temp directory without app-specific subdirectory
+   * - ``CONFIG_FILES_ENABLED``
+     - ``TRUE``
+     - Enable config.yaml reading; when ``FALSE``, no config files are read
+   * - ``LOCAL_SECRETS_STORE``
+     - ``TRUE``
+     - Enable local keystore; when ``FALSE``, no keystore files are created
    * - ``ALL_USER_KS``
      - ``FALSE``
      - Create all-users keystore (App_Local_Store)

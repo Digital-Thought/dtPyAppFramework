@@ -2,7 +2,13 @@ import os
 
 from ...paths import ApplicationPaths
 from .local_secret_store import LocalSecretStore
+from .secret_store import SecretsStoreException
 import logging
+
+
+class LocalSecretsDisabledException(SecretsStoreException):
+    """Exception raised when attempting to write to local secrets store while it is disabled."""
+    pass
 
 
 class LocalSecretStoresManager:
@@ -12,6 +18,12 @@ class LocalSecretStoresManager:
     Each process (main or spawned) creates its own instance and accesses
     keystore files directly. Cross-process synchronisation is handled by
     FileLock in PasswordProtectedKeystoreWithHMAC.
+
+    The local secrets store can be disabled by setting the environment variable
+    LOCAL_SECRETS_STORE=FALSE. When disabled:
+    - No keystores are created or loaded
+    - Reading secrets returns None (or the default value)
+    - Writing secrets raises LocalSecretsDisabledException
     """
 
     def __init__(self, application_paths=None, application_settings=None):
@@ -19,7 +31,14 @@ class LocalSecretStoresManager:
         self.application_settings = application_settings
         self.stores = []
         self.store_names = []
-        self._load_stores()
+
+        # Check if local secrets store is enabled (default: TRUE)
+        self.local_secrets_enabled = os.environ.get('LOCAL_SECRETS_STORE', 'TRUE').upper() != 'FALSE'
+
+        if self.local_secrets_enabled:
+            self._load_stores()
+        else:
+            logging.info('Local secrets store is disabled (LOCAL_SECRETS_STORE=FALSE)')
 
     def _load_stores(self):
         if not self.application_paths:
@@ -66,6 +85,16 @@ class LocalSecretStoresManager:
 
     def get_local_stores_index(self):
         _index = {"User_Local_Store": {}, "App_Local_Store": {}}
+
+        # Return empty index if local secrets store is disabled
+        if not self.local_secrets_enabled:
+            for key in _index:
+                _index[key]['available'] = False
+                _index[key]['index'] = []
+                _index[key]['read_only'] = True
+                _index[key]['disabled'] = True
+            return _index
+
         for key in _index:
             try:
                 _index[key]['available'] = self.store_available(key)
@@ -151,7 +180,13 @@ class LocalSecretStoresManager:
 
         Returns:
             Secret value if found, else default_value.
+            Returns default_value if local secrets store is disabled.
         """
+        # Return default if local secrets store is disabled
+        if not self.local_secrets_enabled:
+            logging.debug('Local secrets store is disabled, returning default value')
+            return default_value
+
         # Defensive check for empty keys
         if not key or (isinstance(key, str) and not key.strip()):
             logging.debug('Empty key passed to get_secret, returning default value')
@@ -167,6 +202,12 @@ class LocalSecretStoresManager:
         return value
 
     def set_persistent_setting(self, key, value):
+        # Raise exception if local secrets store is disabled
+        if not self.local_secrets_enabled:
+            raise LocalSecretsDisabledException(
+                'Cannot save persistent setting: local secrets store is disabled (LOCAL_SECRETS_STORE=FALSE)'
+            )
+
         for store in self.stores:
             if 'User_Local_Store' == store.store_name:
                 if store.store_available and not store.store_read_only:
@@ -176,6 +217,12 @@ class LocalSecretStoresManager:
                 break
 
     def set_secret(self, key, value, store_name='User_Local_Store'):
+        # Raise exception if local secrets store is disabled
+        if not self.local_secrets_enabled:
+            raise LocalSecretsDisabledException(
+                'Cannot save secret: local secrets store is disabled (LOCAL_SECRETS_STORE=FALSE)'
+            )
+
         if not store_name:
             store_name = 'User_Local_Store'
         for store in self.stores:
@@ -187,6 +234,12 @@ class LocalSecretStoresManager:
                 break
 
     def delete_secret(self, key, store_name='User_Local_Store'):
+        # Raise exception if local secrets store is disabled
+        if not self.local_secrets_enabled:
+            raise LocalSecretsDisabledException(
+                'Cannot delete secret: local secrets store is disabled (LOCAL_SECRETS_STORE=FALSE)'
+            )
+
         for store in self.stores:
             if store_name and store_name == store.store_name:
                 store.delete_secret(key)

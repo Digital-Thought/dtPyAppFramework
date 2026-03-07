@@ -270,6 +270,9 @@ Mode Selection
    * - ``USE_SYSTEM_TEMP``
      - ``TRUE``
      - Uses native OS temp directory directly without app-specific subdirectory
+   * - ``CONFIG_FILES_ENABLED``
+     - ``FALSE``
+     - Disables all config.yaml file reading; settings.get() returns default values
 
 Container Configuration
 -----------------------
@@ -298,6 +301,9 @@ Keystore Configuration
    * - Variable
      - Default
      - Effect
+   * - ``LOCAL_SECRETS_STORE``
+     - ``TRUE``
+     - When ``FALSE``, disables local keystore entirely; no keystore files are created or accessed
    * - ``ALL_USER_KS``
      - ``FALSE``
      - When ``TRUE``, creates the all-users keystore (``App_Local_Store``) in addition to the per-user keystore

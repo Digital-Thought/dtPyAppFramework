@@ -4,7 +4,8 @@ from ...decorators import singleton
 from .local_secret_store import LocalSecretStore
 from .aws_secret_store import AWSSecretsStore
 from .azure_secret_store import AzureSecretsStore
-from .local_secret_stores_manager import LocalSecretStoresManager
+from .local_secret_stores_manager import LocalSecretStoresManager, LocalSecretsDisabledException
+from .secret_store import SecretsStoreException
 
 
 @singleton()
